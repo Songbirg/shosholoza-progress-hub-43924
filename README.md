@@ -1,73 +1,162 @@
-# Welcome to your Lovable project
+# Shosholoza Progressive Party Website
 
-## Project info
+[![Netlify Status](https://img.shields.io/badge/Netlify-Ready-00C7B7?logo=netlify)](https://www.netlify.com/)
+[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3-38B2AC?logo=tailwind-css)](https://tailwindcss.com/)
 
-**URL**: https://lovable.dev/projects/5ba5427c-748d-4935-ba3e-466d0c743e13
+A modern, responsive website for the Shosholoza Progressive Party (Shosh), featuring a multi-step membership registration system with digital signatures and PDF generation.
 
-## How can I edit this code?
+## 🌟 Features
 
-There are several ways of editing your application.
+### Multi-Step Membership Form
+- **3-Step Registration Process** with animated progress indicator
+- **Digital Signature** capture (mouse & touch support)
+- **PDF Generation** with complete membership details
+- **Email Submission** to president@shosh.org.za
+- **Real-time Validation** (ID numbers, phone numbers, required fields)
+- **Unique Membership Numbers** auto-generated
+- **Responsive Design** for mobile and desktop
 
-**Use Lovable**
+### Website Features
+- Modern, clean design with party branding
+- Responsive navigation
+- About page with party information
+- Founder profile page
+- Values and mission statement
+- Contact form
+- Interactive timeline
+- Location map integration
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/5ba5427c-748d-4935-ba3e-466d0c743e13) and start prompting.
+## 🚀 Quick Start
 
-Changes made via Lovable will be committed automatically to this repo.
+### Prerequisites
+- Node.js 18+ 
+- npm or yarn
 
-**Use your preferred IDE**
+### Installation
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+```bash
+# Clone the repository
+git clone https://github.com/YOUR_USERNAME/shosholoza-website.git
+cd shosholoza-website
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+# Install dependencies
+npm install
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Visit `http://localhost:8080` to view the site.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 📦 Build
 
-**Use GitHub Codespaces**
+```bash
+# Build for production
+npm run build
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+# Preview production build
+npm run preview
+```
 
-## What technologies are used for this project?
+## 🌐 Deployment
 
-This project is built with:
+### Deploy to Netlify
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+1. **Via Netlify UI** (Recommended)
+   - Push code to GitHub
+   - Connect repository to Netlify
+   - Deploy automatically
 
-## How can I deploy this project?
+2. **Via Netlify CLI**
+   ```bash
+   npm install -g netlify-cli
+   netlify login
+   netlify init
+   netlify deploy --prod
+   ```
 
-Simply open [Lovable](https://lovable.dev/projects/5ba5427c-748d-4935-ba3e-466d0c743e13) and click on Share -> Publish.
+See [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) for detailed instructions.
 
-## Can I connect a custom domain to my Lovable project?
+## 📋 Project Structure
 
-Yes, you can!
+```
+shosholoza-website/
+├── src/
+│   ├── components/       # Reusable UI components
+│   │   ├── ui/          # shadcn/ui components
+│   │   ├── Navigation.tsx
+│   │   ├── Footer.tsx
+│   │   └── ...
+│   ├── pages/           # Page components
+│   │   ├── Index.tsx    # Home page
+│   │   ├── Join.tsx     # Membership form
+│   │   ├── About.tsx
+│   │   └── ...
+│   ├── hooks/           # Custom React hooks
+│   ├── lib/             # Utility functions
+│   └── assets/          # Images and static files
+├── public/              # Public assets
+├── netlify.toml         # Netlify configuration
+└── package.json
+```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## 🎨 Tech Stack
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- **Framework**: React 18 with TypeScript
+- **Styling**: Tailwind CSS
+- **UI Components**: shadcn/ui
+- **Icons**: Lucide React
+- **PDF Generation**: jsPDF
+- **Build Tool**: Vite
+- **Deployment**: Netlify
+
+## 📝 Documentation
+
+- [Membership Form Features](./MEMBERSHIP_FORM_FEATURES.md)
+- [Email Setup Guide](./EMAIL_SETUP.md)
+- [Deployment Guide](./DEPLOYMENT_GUIDE.md)
+
+## 🔧 Configuration
+
+### Email Setup
+The membership form currently logs email content to the console. To enable actual email sending:
+
+1. Set up a backend API (Node.js/Express)
+2. Or use EmailJS for client-side email
+3. Or use Netlify Functions
+
+See [EMAIL_SETUP.md](./EMAIL_SETUP.md) for detailed instructions.
+
+### Environment Variables
+Create a `.env` file for any API keys:
+```env
+VITE_EMAILJS_SERVICE_ID=your_service_id
+VITE_EMAILJS_TEMPLATE_ID=your_template_id
+VITE_EMAILJS_PUBLIC_KEY=your_public_key
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is proprietary and confidential.
+
+## 👥 Contact
+
+Shosholoza Progressive Party
+- Email: president@shosh.org.za
+- Website: [Coming Soon]
+
+## 🙏 Acknowledgments
+
+- Built with [shadcn/ui](https://ui.shadcn.com/)
+- Icons by [Lucide](https://lucide.dev/)
+- Hosted on [Netlify](https://www.netlify.com/)
