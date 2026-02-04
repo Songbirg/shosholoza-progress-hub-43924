@@ -13,7 +13,7 @@ const Navigation = () => {
     { name: "About", path: "/about" },
     { name: "Our Founder", path: "/founder" },
     { name: "Values", path: "/values" },
-    { name: "Join Us", path: "/join" },
+    { name: "Join Us", path: "/membership" },
     { name: "Contact", path: "/contact" },
   ];
 
@@ -43,7 +43,7 @@ const Navigation = () => {
                 <span className={`absolute bottom-0 left-0 w-full h-0.5 bg-foreground transform origin-left transition-transform duration-300 ${isActive(item.path) ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`}></span>
               </Link>
             ))}
-            <Link to="/join" className="hover-scale inline-block">
+            <Link to="/membership" className="hover-scale inline-block">
               <Button variant="hero" size="sm">
                 Join the Movement
               </Button>
@@ -77,7 +77,7 @@ const Navigation = () => {
                 {item.name}
               </Link>
             ))}
-            <Link to="/join" onClick={() => setIsOpen(false)}>
+            <Link to="/membership" onClick={() => setIsOpen(false)}>
               <Button variant="hero" size="sm" className="w-full mt-4">
                 Join the Movement
               </Button>

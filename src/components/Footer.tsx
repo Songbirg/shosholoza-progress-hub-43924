@@ -38,12 +38,12 @@ const Footer = () => {
             <h4 className="font-semibold mb-4">Get Involved</h4>
             <ul className="space-y-2">
               <li>
-                <Link to="/join" className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-smooth">
+                <Link to="/membership" className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-smooth">
                   Join the Party
                 </Link>
               </li>
               <li>
-                <Link to="/join" className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-smooth">
+                <Link to="/membership" className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-smooth">
                   Volunteer
                 </Link>
               </li>

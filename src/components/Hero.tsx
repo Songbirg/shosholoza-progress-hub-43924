@@ -26,7 +26,7 @@ const Hero = () => {
             Social democracy. Equal opportunity. Security and prosperity for all.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in" style={{ animationDelay: '0.4s' }}>
-            <Link to="/join" className="hover-scale inline-block">
+            <Link to="/membership" className="hover-scale inline-block">
               <Button variant="hero" size="lg" className="w-full sm:w-auto">
                 Join Our Movement
               </Button>

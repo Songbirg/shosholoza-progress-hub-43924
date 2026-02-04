@@ -92,7 +92,7 @@ After deploying to Netlify, test these features:
 - [ ] Contact form is functional
 
 ### Membership Form (Critical!)
-- [ ] Navigate to `/join` page
+- [ ] Navigate to `/membership` page
 - [ ] **Step 1**: Fill in personal details
   - [ ] Name validation works
   - [ ] ID number accepts 13 digits only
