@@ -10,6 +10,7 @@ import ValuesPage from "./pages/ValuesPage";
 import Join from "./pages/Join";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
+import ViralShare from "./pages/ViralShare";
 
 const queryClient = new QueryClient();
 
@@ -20,7 +21,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<ViralShare />} />
+          <Route path="/home" element={<Index />} />
           <Route path="/about" element={<About />} />
           <Route path="/founder" element={<Founder />} />
           <Route path="/values" element={<ValuesPage />} />
