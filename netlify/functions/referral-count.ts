@@ -1,8 +1,5 @@
 import { Handler, HandlerEvent } from "@netlify/functions";
-
-// Shared storage
-const visits: Map<string, any[]> = new Map();
-const sessionStats: Map<string, { count: number; unlocked: boolean }> = new Map();
+import { getValidatedCount } from "./referral-store";
 
 export const handler: Handler = async (event: HandlerEvent) => {
   const headers = {
@@ -34,19 +31,14 @@ export const handler: Handler = async (event: HandlerEvent) => {
       };
     }
 
-    // Get validated visit count
-    const sessionVisits = visits.get(sessionId) || [];
-    const validatedCount = sessionVisits.filter(v => v.validated).length;
-
-    // Get or create stats
-    const stats = sessionStats.get(sessionId) || { count: validatedCount, unlocked: false };
+    const validatedCount = await getValidatedCount(sessionId);
     
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({ 
         count: validatedCount,
-        unlocked: stats.unlocked
+        unlocked: validatedCount >= 10
       }),
     };
   } catch (error) {

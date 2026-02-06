@@ -1,262 +1,188 @@
-﻿// Tracking Service for Viral Sharing System
 
-export interface SessionData {
+type SessionData = {
   sessionId: string;
   createdAt: number;
-  referralCount: number;
-  isUnlocked: boolean;
-  lastActivityAt: number;
-  fingerprint: string;
-}
+};
 
-export interface VisitData {
-  sessionId: string;
-  timestamp: number;
-  fingerprint: string;
-  ipHash?: string;
-  userAgent: string;
-  timeOnPage: number;
-}
+const SESSION_KEY = "shosh_session";
+const VISITOR_KEY = "shosh_visitor";
+const REF_TRACKED_KEY = "shosh_ref_tracked";
+const MIN_TIME_ON_PAGE = 8000;
 
-// Generate unique session ID
+const safeJsonParse = <T,>(value: string | null): T | null => {
+  if (!value) return null;
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return null;
+  }
+};
+
 export const generateSessionId = (): string => {
-  return `shosh_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+  const rand = Math.random().toString(36).slice(2, 10);
+  return `shosh_${Date.now()}_${rand}`;
 };
 
-// Generate device fingerprint
-export const generateFingerprint = (): string => {
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-  if (ctx) {
-    ctx.textBaseline = 'top';
-    ctx.font = '14px Arial';
-    ctx.fillText('fingerprint', 2, 2);
-  }
-  
-  const fingerprint = {
-    userAgent: navigator.userAgent,
-    language: navigator.language,
-    screenResolution: `${screen.width}x${screen.height}`,
-    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    canvasData: canvas.toDataURL(),
-  };
-  
-  return btoa(JSON.stringify(fingerprint)).substring(0, 32);
+const getOrCreateVisitorId = (): string => {
+  const existing = localStorage.getItem(VISITOR_KEY);
+  if (existing) return existing;
+  const id = `v_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+  localStorage.setItem(VISITOR_KEY, id);
+  return id;
 };
 
-// Get or create session
 export const getOrCreateSession = (): SessionData => {
-  const stored = localStorage.getItem('shosh_session');
-  
-  if (stored) {
-    try {
-      const session: SessionData = JSON.parse(stored);
-      if (Date.now() - session.createdAt < 30 * 24 * 60 * 60 * 1000) {
-        return session;
-      }
-    } catch (e) {
-      console.error('Invalid session data');
-    }
-  }
-  
-  const newSession: SessionData = {
+  const stored = safeJsonParse<SessionData>(localStorage.getItem(SESSION_KEY));
+  if (stored?.sessionId) return stored;
+
+  const session: SessionData = {
     sessionId: generateSessionId(),
     createdAt: Date.now(),
-    referralCount: 0,
-    isUnlocked: false,
-    lastActivityAt: Date.now(),
-    fingerprint: generateFingerprint(),
   };
-  
-  localStorage.setItem('shosh_session', JSON.stringify(newSession));
-  return newSession;
+  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  return session;
 };
 
-// Update session
-export const updateSession = (updates: Partial<SessionData>): SessionData => {
-  const session = getOrCreateSession();
-  const updated = {
-    ...session,
-    ...updates,
-    lastActivityAt: Date.now(),
-  };
-  
-  localStorage.setItem('shosh_session', JSON.stringify(updated));
-  return updated;
+const getReferralFromUrl = (): string | null => {
+  const params = new URLSearchParams(window.location.search);
+  const ref = params.get("ref");
+  if (!ref) return null;
+  return ref.trim() || null;
 };
 
-// Check if user is first-time visitor
-export const isFirstTimeVisitor = (): boolean => {
-  const visited = localStorage.getItem('shosh_visited');
-  if (!visited) {
-    localStorage.setItem('shosh_visited', Date.now().toString());
-    return true;
+export const generateFingerprint = async (): Promise<string> => {
+  const visitorId = getOrCreateVisitorId();
+  const ua = navigator.userAgent;
+  const lang = navigator.language;
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const screenStr = `${window.screen?.width ?? 0}x${window.screen?.height ?? 0}x${window.devicePixelRatio ?? 1}`;
+
+  const raw = [visitorId, ua, lang, tz, screenStr].join("|");
+  const data = new TextEncoder().encode(raw);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(digest))
+    .slice(0, 16)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+};
+
+const postJson = async <T,>(url: string, body: unknown): Promise<T> => {
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Request failed: ${res.status}`);
   }
-  return false;
+
+  return (await res.json()) as T;
 };
 
-// Track visit
-export const trackVisit = async (referrerSessionId?: string): Promise<void> => {
-  const fingerprint = generateFingerprint();
-  const isFirstTime = isFirstTimeVisitor();
-  
-  if (!isFirstTime) {
-    console.log('Returning visitor - not counted');
-    return;
+const getJson = async <T,>(url: string): Promise<T> => {
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Request failed: ${res.status}`);
   }
-  
-  const visitData: VisitData = {
-    sessionId: referrerSessionId || 'direct',
+  return (await res.json()) as T;
+};
+
+export const trackShare = async (): Promise<void> => {
+  const { sessionId } = getOrCreateSession();
+  await postJson("/.netlify/functions/track-share", {
+    sessionId,
+    timestamp: Date.now(),
+  });
+};
+
+export const getWhatsAppShareLink = (): string => {
+  const { sessionId } = getOrCreateSession();
+  const baseUrl = window.location.origin;
+  const referralUrl = `${baseUrl}/?ref=${encodeURIComponent(sessionId)}`;
+
+  const text = `🔥 WIN R5,000 CASH EVERY MONTH!\n\nSHOSH is giving members a chance to win R5,000 monthly.\n\nOpen this link: ${referralUrl}`;
+  return `https://wa.me/?text=${encodeURIComponent(text)}`;
+};
+
+const trackVisit = async (refSessionId: string): Promise<{ counted?: boolean } | null> => {
+  const fingerprint = await generateFingerprint();
+  const userAgent = navigator.userAgent;
+  return await postJson("/.netlify/functions/track-visit", {
+    sessionId: refSessionId,
     timestamp: Date.now(),
     fingerprint,
-    userAgent: navigator.userAgent,
+    userAgent,
     timeOnPage: 0,
-  };
-  
-  sessionStorage.setItem('visit_start', Date.now().toString());
-  
-  try {
-    await fetch('/api/track-visit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(visitData),
-    });
-  } catch (error) {
-    console.error('Failed to track visit:', error);
-  }
+  });
 };
 
-// Validate visit
-export const validateVisit = async (referrerSessionId: string): Promise<boolean> => {
-  const visitStart = sessionStorage.getItem('visit_start');
-  if (!visitStart) return false;
-  
-  const timeOnPage = Date.now() - parseInt(visitStart);
-  const MIN_TIME = 8000;
-  
-  if (timeOnPage < MIN_TIME) {
-    console.log('Visit too short - not validated');
-    return false;
-  }
-  
-  try {
-    const response = await fetch('/api/validate-visit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sessionId: referrerSessionId,
-        fingerprint: generateFingerprint(),
-        timeOnPage,
-      }),
-    });
-    
-    const data = await response.json();
-    return data.valid;
-  } catch (error) {
-    console.error('Failed to validate visit:', error);
-    return false;
-  }
+const validateVisit = async (refSessionId: string, timeOnPage: number): Promise<void> => {
+  const fingerprint = await generateFingerprint();
+  await postJson("/.netlify/functions/validate-visit", {
+    sessionId: refSessionId,
+    fingerprint,
+    timeOnPage,
+  });
 };
 
-// Get referral count
-export const getReferralCount = async (): Promise<number> => {
-  const session = getOrCreateSession();
-  
-  try {
-    const response = await fetch(`/api/referral-count/${session.sessionId}`);
-    const data = await response.json();
-    updateSession({ referralCount: data.count });
-    return data.count;
-  } catch (error) {
-    console.error('Failed to get referral count:', error);
-    return session.referralCount;
-  }
-};
-
-// Check unlock status
-export const checkUnlockStatus = async (): Promise<boolean> => {
-  const session = getOrCreateSession();
-  
-  if (session.isUnlocked) return true;
-  
-  try {
-    const response = await fetch(`/api/unlock-status/${session.sessionId}`);
-    const data = await response.json();
-    
-    if (data.unlocked) {
-      updateSession({ isUnlocked: true, referralCount: data.count });
-      return true;
-    }
-    
-    return false;
-  } catch (error) {
-    console.error('Failed to check unlock status:', error);
-    return false;
-  }
-};
-
-// Get share URL
-export const getShareUrl = (): string => {
-  const session = getOrCreateSession();
-  const baseUrl = window.location.origin;
-  return `${baseUrl}/?ref=${session.sessionId}`;
-};
-
-// Get WhatsApp message
-export const getWhatsAppMessage = (): string => {
-  const shareUrl = getShareUrl();
-  return ` WIN R5,000 CASH EVERY MONTH!
-
-SHOSH is giving members a chance to win R5,000 monthly.
-
-Share this link with 10 friends and join: ${shareUrl}`;
-};
-
-// Get WhatsApp share link
-export const getWhatsAppShareLink = (): string => {
-  const message = encodeURIComponent(getWhatsAppMessage());
-  return `https://wa.me/?text=${message}`;
-};
-
-// Track share
-export const trackShare = async (): Promise<void> => {
-  const session = getOrCreateSession();
-  
-  try {
-    await fetch('/api/track-share', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sessionId: session.sessionId,
-        timestamp: Date.now(),
-      }),
-    });
-  } catch (error) {
-    console.error('Failed to track share:', error);
-  }
-};
-
-// Get referrer from URL
-export const getReferrerFromUrl = (): string | null => {
-  const params = new URLSearchParams(window.location.search);
-  return params.get('ref');
-};
-
-// Initialize tracking
 export const initializeTracking = async (): Promise<void> => {
-  const referrerId = getReferrerFromUrl();
-  
-  if (referrerId) {
-    await trackVisit(referrerId);
-    setTimeout(async () => {
-      await validateVisit(referrerId);
-    }, 8000);
+  const refSessionId = getReferralFromUrl() ?? "direct";
+  const ownSessionId = getOrCreateSession().sessionId;
+
+  if (!refSessionId || refSessionId === "direct" || refSessionId === ownSessionId) return;
+
+  const tracked = safeJsonParse<Record<string, true>>(localStorage.getItem(REF_TRACKED_KEY)) || {};
+  if (tracked[refSessionId]) return;
+
+  const start = Date.now();
+  const trackRes = await trackVisit(refSessionId);
+  const counted = !!(trackRes && (trackRes as any).counted !== false);
+
+  if (!counted) {
+    tracked[refSessionId] = true;
+    localStorage.setItem(REF_TRACKED_KEY, JSON.stringify(tracked));
+    return;
   }
-  
-  getOrCreateSession();
+
+  window.setTimeout(async () => {
+    try {
+      const timeOnPage = Date.now() - start;
+      await validateVisit(refSessionId, timeOnPage);
+      tracked[refSessionId] = true;
+      localStorage.setItem(REF_TRACKED_KEY, JSON.stringify(tracked));
+    } catch {
+    }
+  }, MIN_TIME_ON_PAGE);
 };
 
-// Export session data
-export const exportSessionData = (): SessionData => {
-  return getOrCreateSession();
+export const getReferralCount = async (): Promise<number> => {
+  const { sessionId } = getOrCreateSession();
+  const data = await getJson<{ count?: number }>(`/.netlify/functions/referral-count/${encodeURIComponent(sessionId)}`);
+  return data.count ?? 0;
 };
+
+export const checkUnlockStatus = async (): Promise<boolean> => {
+  const { sessionId } = getOrCreateSession();
+  const data = await getJson<{ unlocked?: boolean }>(`/.netlify/functions/unlock-status/${encodeURIComponent(sessionId)}`);
+  return !!data.unlocked;
+};
+
+export const getReferralCountForSession = async (sessionId: string): Promise<number> => {
+  const trimmed = sessionId.trim();
+  if (!trimmed) return 0;
+  const data = await getJson<{ count?: number }>(
+    `/.netlify/functions/referral-count/${encodeURIComponent(trimmed)}`
+  );
+  return data.count ?? 0;
+};
+
+export const checkUnlockStatusForSession = async (sessionId: string): Promise<boolean> => {
+  const trimmed = sessionId.trim();
+  if (!trimmed) return false;
+  const data = await getJson<{ unlocked?: boolean }>(
+    `/.netlify/functions/unlock-status/${encodeURIComponent(trimmed)}`
+  );
+  return !!data.unlocked;
+};
+

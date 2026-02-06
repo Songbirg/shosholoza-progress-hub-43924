@@ -1,14 +1,11 @@
 import { Handler, HandlerEvent } from "@netlify/functions";
+import { getVisits, setVisits } from "./referral-store";
 
 interface ValidateRequest {
   sessionId: string;
   fingerprint: string;
   timeOnPage: number;
 }
-
-// Shared storage (in production, use a database)
-const visits: Map<string, any[]> = new Map();
-const sessionStats: Map<string, { count: number; unlocked: boolean }> = new Map();
 
 const MIN_TIME_ON_PAGE = 8000; // 8 seconds
 
@@ -47,7 +44,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
     }
 
     // Find and validate the visit
-    const sessionVisits = visits.get(sessionId) || [];
+    const sessionVisits = await getVisits(sessionId);
     const visit = sessionVisits.find(v => v.fingerprint === fingerprint && !v.validated);
 
     if (!visit) {
@@ -65,17 +62,10 @@ export const handler: Handler = async (event: HandlerEvent) => {
     visit.validated = true;
     visit.timeOnPage = timeOnPage;
 
-    // Update session stats
-    const stats = sessionStats.get(sessionId) || { count: 0, unlocked: false };
+    await setVisits(sessionId, sessionVisits);
+
     const validatedCount = sessionVisits.filter(v => v.validated).length;
-    stats.count = validatedCount;
-    
-    // Check if unlocked (10 validated visits)
-    if (validatedCount >= 10 && !stats.unlocked) {
-      stats.unlocked = true;
-    }
-    
-    sessionStats.set(sessionId, stats);
+    const unlocked = validatedCount >= 10;
 
     return {
       statusCode: 200,
@@ -83,7 +73,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
       body: JSON.stringify({ 
         valid: true,
         count: validatedCount,
-        unlocked: stats.unlocked
+        unlocked
       }),
     };
   } catch (error) {

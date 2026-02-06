@@ -1,4 +1,5 @@
 import { Handler, HandlerEvent } from "@netlify/functions";
+import { getVisits, setVisits, type StoredVisit } from "./referral-store";
 
 interface VisitData {
   sessionId: string;
@@ -8,14 +9,7 @@ interface VisitData {
   timeOnPage: number;
 }
 
-interface StoredVisit extends VisitData {
-  ipHash: string;
-  validated: boolean;
-}
-
-// In-memory storage (replace with database in production)
-const visits: Map<string, StoredVisit[]> = new Map();
-const sessionStats: Map<string, { count: number; unlocked: boolean }> = new Map();
+type StoredVisitInternal = StoredVisit;
 
 // Hash IP address for privacy
 const hashIP = (ip: string): string => {
@@ -23,8 +17,7 @@ const hashIP = (ip: string): string => {
 };
 
 // Check if visit is duplicate
-const isDuplicateVisit = (sessionId: string, fingerprint: string, ipHash: string): boolean => {
-  const sessionVisits = visits.get(sessionId) || [];
+const isDuplicateVisit = (sessionVisits: StoredVisitInternal[], fingerprint: string, ipHash: string): boolean => {
   
   // Check for same fingerprint
   const fingerprintMatch = sessionVisits.some(v => v.fingerprint === fingerprint);
@@ -75,8 +68,10 @@ export const handler: Handler = async (event: HandlerEvent) => {
     const ip = event.headers['x-forwarded-for'] || event.headers['client-ip'] || 'unknown';
     const ipHash = hashIP(ip);
 
+    const sessionVisits = await getVisits(sessionId);
+
     // Check for duplicates
-    if (isDuplicateVisit(sessionId, fingerprint, ipHash)) {
+    if (isDuplicateVisit(sessionVisits as StoredVisitInternal[], fingerprint, ipHash)) {
       return {
         statusCode: 200,
         headers,
@@ -89,15 +84,14 @@ export const handler: Handler = async (event: HandlerEvent) => {
     }
 
     // Store visit
-    const storedVisit: StoredVisit = {
+    const storedVisit: StoredVisitInternal = {
       ...visitData,
       ipHash,
       validated: false,
     };
 
-    const sessionVisits = visits.get(sessionId) || [];
     sessionVisits.push(storedVisit);
-    visits.set(sessionId, sessionVisits);
+    await setVisits(sessionId, sessionVisits);
 
     return {
       statusCode: 200,

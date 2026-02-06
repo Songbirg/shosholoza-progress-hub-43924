@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Share2, 
@@ -18,6 +19,8 @@ import {
   getOrCreateSession,
   getReferralCount,
   checkUnlockStatus,
+  getReferralCountForSession,
+  checkUnlockStatusForSession,
   getWhatsAppShareLink,
   trackShare,
   initializeTracking,
@@ -29,6 +32,11 @@ const ViralShare = () => {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showConfetti, setShowConfetti] = useState(false);
+
+  const [lookupCode, setLookupCode] = useState("");
+  const [lookupCount, setLookupCount] = useState<number | null>(null);
+  const [lookupUnlocked, setLookupUnlocked] = useState<boolean | null>(null);
+  const [lookupLoading, setLookupLoading] = useState(false);
 
   const REQUIRED_REFERRALS = 10;
   const PRIZE_AMOUNT = "R5,000";
@@ -57,7 +65,7 @@ const ViralShare = () => {
         setTimeout(() => setShowConfetti(false), 5000);
       }
     };
-    
+
     init();
     
     // Poll for updates every 10 seconds
@@ -80,6 +88,55 @@ const ViralShare = () => {
     
     return () => clearInterval(interval);
   }, [isUnlocked, toast]);
+
+  const handleCopyCode = async () => {
+    const { sessionId } = getOrCreateSession();
+    try {
+      await navigator.clipboard.writeText(sessionId);
+      toast({
+        title: "Code copied",
+        description: "Your tracking code has been copied.",
+      });
+    } catch {
+      toast({
+        title: "Copy failed",
+        description: "Please copy the code manually.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleLookup = async () => {
+    const code = lookupCode.trim();
+    if (!code) {
+      toast({
+        title: "Enter a code",
+        description: "Paste a tracking code to check progress.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLookupLoading(true);
+    try {
+      const [count, unlocked] = await Promise.all([
+        getReferralCountForSession(code),
+        checkUnlockStatusForSession(code),
+      ]);
+      setLookupCount(count);
+      setLookupUnlocked(unlocked);
+    } catch {
+      setLookupCount(null);
+      setLookupUnlocked(null);
+      toast({
+        title: "Could not fetch progress",
+        description: "Please check the code and try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLookupLoading(false);
+    }
+  };
 
   const handleShare = async () => {
     await trackShare();
@@ -166,6 +223,48 @@ const ViralShare = () => {
                     : `${REQUIRED_REFERRALS - referralCount} more ${REQUIRED_REFERRALS - referralCount === 1 ? 'friend' : 'friends'} to go!`
                   }
                 </p>
+              </div>
+
+              <div className="bg-gray-50 rounded-xl p-6 mb-6">
+                <div className="flex flex-col gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-2">Your unique code</p>
+                    <div className="flex gap-2">
+                      <Input value={getOrCreateSession().sessionId} readOnly />
+                      <Button type="button" variant="secondary" onClick={handleCopyCode}>
+                        Copy
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Anyone can enter this code on the site to see your progress.
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-2">Check progress by code</p>
+                    <div className="flex gap-2">
+                      <Input
+                        value={lookupCode}
+                        onChange={(e) => setLookupCode(e.target.value)}
+                        placeholder="Paste code (e.g. shosh_...)"
+                      />
+                      <Button type="button" onClick={handleLookup} disabled={lookupLoading}>
+                        {lookupLoading ? "Checking..." : "Check"}
+                      </Button>
+                    </div>
+
+                    {lookupCount !== null && (
+                      <div className="mt-3 text-sm">
+                        <span className="font-medium">Progress:</span> {lookupCount} / {REQUIRED_REFERRALS}
+                        {lookupUnlocked ? (
+                          <span className="ml-2 text-green-700 font-medium">Unlocked</span>
+                        ) : (
+                          <span className="ml-2 text-muted-foreground">Locked</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {/* How It Works */}
