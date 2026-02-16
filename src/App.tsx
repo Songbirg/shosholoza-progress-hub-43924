@@ -21,8 +21,9 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<ViralShare />} />
+          <Route path="/" element={<Index />} />
           <Route path="/home" element={<Index />} />
+          <Route path="/share" element={<ViralShare />} />
           <Route path="/about" element={<About />} />
           <Route path="/founder" element={<Founder />} />
           <Route path="/values" element={<ValuesPage />} />
