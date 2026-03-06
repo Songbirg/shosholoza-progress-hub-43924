@@ -11,6 +11,7 @@ import Join from "./pages/Join";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 import ViralShare from "./pages/ViralShare";
+import AdminApplications from "./pages/AdminApplications";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/home" element={<Index />} />
           <Route path="/share" element={<ViralShare />} />
+          <Route path="/admin/applications" element={<AdminApplications />} />
           <Route path="/about" element={<About />} />
           <Route path="/founder" element={<Founder />} />
           <Route path="/values" element={<ValuesPage />} />

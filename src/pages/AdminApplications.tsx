@@ -1,0 +1,127 @@
+import { useMemo, useState } from "react";
+import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useToast } from "@/hooks/use-toast";
+
+type ApplicationRow = {
+  id: string;
+  created_at: string;
+  membership_number: string;
+  full_name: string;
+  surname: string;
+  id_number: string;
+  phone_number: string;
+  email: string | null;
+  province: string;
+  city: string;
+};
+
+const AdminApplications = () => {
+  const { toast } = useToast();
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [applications, setApplications] = useState<ApplicationRow[]>([]);
+
+  const sorted = useMemo(() => applications, [applications]);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/.netlify/functions/admin-list-applications", {
+        method: "GET",
+        headers: {
+          "x-admin-password": password,
+        },
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || "Failed to load applications");
+      }
+
+      const data = (await res.json()) as { applications: ApplicationRow[] };
+      setApplications(Array.isArray(data.applications) ? data.applications : []);
+    } catch (e) {
+      setApplications([]);
+      toast({
+        title: "Error",
+        description: "Could not load applications. Check the admin password and try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Navigation />
+      <main className="flex-1">
+        <div className="max-w-6xl mx-auto px-4 py-10">
+          <h1 className="text-3xl font-bold mb-2">Member Applications</h1>
+          <p className="text-muted-foreground mb-6">Admin dashboard</p>
+
+          <div className="flex flex-col sm:flex-row gap-3 sm:items-center mb-6">
+            <Input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Admin password"
+              className="sm:max-w-xs"
+            />
+            <Button onClick={load} disabled={loading || !password.trim()}>
+              {loading ? "Loading..." : "Load applications"}
+            </Button>
+          </div>
+
+          <div className="rounded-lg border bg-card">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Submitted</TableHead>
+                  <TableHead>Membership #</TableHead>
+                  <TableHead>Full name</TableHead>
+                  <TableHead>Surname</TableHead>
+                  <TableHead>ID number</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Province</TableHead>
+                  <TableHead>City</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sorted.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center text-muted-foreground">
+                      {loading ? "Loading..." : "No applications loaded"}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  sorted.map((a) => (
+                    <TableRow key={a.id}>
+                      <TableCell>{new Date(a.created_at).toLocaleString("en-ZA")}</TableCell>
+                      <TableCell className="font-medium">{a.membership_number}</TableCell>
+                      <TableCell>{a.full_name}</TableCell>
+                      <TableCell>{a.surname}</TableCell>
+                      <TableCell>{a.id_number}</TableCell>
+                      <TableCell>{a.phone_number}</TableCell>
+                      <TableCell>{a.email || ""}</TableCell>
+                      <TableCell>{a.province}</TableCell>
+                      <TableCell>{a.city}</TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      </main>
+      <Footer />
+    </div>
+  );
+};
+
+export default AdminApplications;

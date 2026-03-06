@@ -295,8 +295,23 @@ Please check the attached details for the complete application.
       // Send email to president
       await sendEmailToPresident(newMembershipNumber);
 
-      // Simulate API call to store data
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const signatureDataUrl = signatureCanvasRef.current?.toDataURL("image/png") || "";
+
+      const res = await fetch("/.netlify/functions/submit-application", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          membershipNumber: newMembershipNumber,
+          formData,
+          signatureDataUrl,
+          userAgent: navigator.userAgent,
+        }),
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || "Failed to submit application");
+      }
 
       setIsSubmitted(true);
       toast({
