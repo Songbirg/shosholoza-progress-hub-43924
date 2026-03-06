@@ -1,4 +1,5 @@
 import { Handler } from "@netlify/functions";
+import { getStore } from "@netlify/blobs";
 
 const json = (statusCode: number, body: unknown) => ({
   statusCode,
@@ -24,47 +25,25 @@ export const handler: Handler = async (event) => {
   if (!adminPassword) return json(500, { error: "Missing ADMIN_PASSWORD env var" });
   if (!provided || provided !== adminPassword) return json(401, { error: "Unauthorized" });
 
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    return json(500, { error: "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY" });
-  }
-
   try {
-    const url = new URL(`${supabaseUrl}/rest/v1/member_applications`);
-    url.searchParams.set(
-      "select",
-      [
-        "id",
-        "created_at",
-        "membership_number",
-        "full_name",
-        "surname",
-        "id_number",
-        "phone_number",
-        "email",
-        "province",
-        "city",
-      ].join(",")
-    );
-    url.searchParams.set("order", "created_at.desc");
+    const blobStore = getStore("member-applications");
+    const list = await blobStore.list();
+    const blobs = list.blobs || [];
 
-    const res = await fetch(url.toString(), {
-      method: "GET",
-      headers: {
-        apikey: serviceRoleKey,
-        Authorization: `Bearer ${serviceRoleKey}`,
-      },
+    const applications = await Promise.all(
+      blobs.map(async (blob) => {
+        const data = await blobStore.get(blob.key, { type: "json" });
+        return data;
+      })
+    );
+
+    const sorted = applications.sort((a, b) => {
+      const aDate = new Date(a.created_at).getTime();
+      const bDate = new Date(b.created_at).getTime();
+      return bDate - aDate;
     });
 
-    if (!res.ok) {
-      const text = await res.text();
-      return json(500, { error: "Failed to fetch applications", details: text });
-    }
-
-    const rows = await res.json();
-    return json(200, { applications: rows });
+    return json(200, { applications: sorted });
   } catch (error) {
     console.error("admin-list-applications error", error);
     return json(500, { error: "Internal server error" });

@@ -4,41 +4,34 @@
 
 The membership form currently logs email content to the console. To enable actual email sending to `president@shosh.org.za`, you need to set up a backend API.
 
-## Supabase Storage + Admin Dashboard
+## Netlify Blob Store + Admin Dashboard
 
-The membership form now also submits the application data to Supabase via a Netlify Function:
+The membership form now submits the application data to **Netlify Blob Store** via a Netlify Function:
 
-- `/.netlify/functions/submit-application` (stores the application in Supabase)
-- `/.netlify/functions/admin-list-applications` (lists applications for the admin dashboard)
+- `/.netlify/functions/submit-application` (stores the application as a JSON blob keyed by membership number)
+- `/.netlify/functions/admin-list-applications` (lists all application blobs for the admin dashboard)
 
 Admin dashboard route:
 
 - `/admin/applications` (password-gated)
 
-### Required Netlify Environment Variables
+### Required Netlify Environment Variable
 
-Set these in Netlify: Site settings -> Environment variables
+Set this in Netlify: Site settings -> Environment variables
 
-- `SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
-- `ADMIN_PASSWORD`
+- `ADMIN_PASSWORD` (choose a password for the admin dashboard)
 
-### Supabase Table
+### How it works
 
-Create a table named `member_applications` with at least the following columns (snake_case):
+- Each submitted application is stored as a JSON blob in the `member-applications` blob store
+- The blob key is the membership number
+- The admin dashboard lists all blobs and shows a simple table
 
-- `membership_number`
-- `full_name`
-- `surname`
-- `date_of_birth`
-- `id_number`
-- `phone_number`
-- `email`
-- `residential_address`
-- `province`
-- `city`
-- `area_suburb`
-- `signature_data_url`
+### No external database required
+
+- Uses Netlify Blob Store (same system used for referral tracking)
+- No Supabase or other services needed
+- Fully private to your Netlify site
 
 ## Recommended Setup Options
 

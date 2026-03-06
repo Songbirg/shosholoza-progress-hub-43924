@@ -1,4 +1,5 @@
 import { Handler } from "@netlify/functions";
+import { getStore } from "@netlify/blobs";
 
 type ApplicationPayload = {
   membershipNumber: string;
@@ -33,13 +34,6 @@ export const handler: Handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return json(200, {});
   if (event.httpMethod !== "POST") return json(405, { error: "Method not allowed" });
 
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    return json(500, { error: "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY" });
-  }
-
   try {
     const payload: ApplicationPayload = JSON.parse(event.body || "{}");
 
@@ -47,7 +41,11 @@ export const handler: Handler = async (event) => {
     if (!payload?.formData) return json(400, { error: "formData is required" });
     if (!payload?.signatureDataUrl) return json(400, { error: "signatureDataUrl is required" });
 
-    const row = {
+    const blobStore = getStore("member-applications");
+    const key = payload.membershipNumber;
+    const blobValue = {
+      id: key,
+      created_at: new Date().toISOString(),
       membership_number: payload.membershipNumber,
       full_name: payload.formData.fullName,
       surname: payload.formData.surname,
@@ -63,24 +61,8 @@ export const handler: Handler = async (event) => {
       user_agent: payload.userAgent || null,
     };
 
-    const res = await fetch(`${supabaseUrl}/rest/v1/member_applications`, {
-      method: "POST",
-      headers: {
-        apikey: serviceRoleKey,
-        Authorization: `Bearer ${serviceRoleKey}`,
-        "Content-Type": "application/json",
-        Prefer: "return=representation",
-      },
-      body: JSON.stringify(row),
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      return json(500, { error: "Failed to insert application", details: text });
-    }
-
-    const created = await res.json();
-    return json(200, { success: true, application: created?.[0] ?? null });
+    await blobStore.setJSON(key, blobValue);
+    return json(200, { success: true, application: blobValue });
   } catch (error) {
     console.error("submit-application error", error);
     return json(500, { error: "Internal server error" });
