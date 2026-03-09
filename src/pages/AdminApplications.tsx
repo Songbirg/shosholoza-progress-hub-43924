@@ -39,16 +39,17 @@ const AdminApplications = () => {
 
       if (!res.ok) {
         const text = await res.text();
-        throw new Error(text || "Failed to load applications");
+        throw new Error(`HTTP ${res.status} ${res.statusText}${text ? `: ${text}` : ""}`);
       }
 
       const data = (await res.json()) as { applications: ApplicationRow[] };
       setApplications(Array.isArray(data.applications) ? data.applications : []);
     } catch (e) {
       setApplications([]);
+      const msg = e instanceof Error ? e.message : String(e);
       toast({
         title: "Error",
-        description: "Could not load applications. Check the admin password and try again.",
+        description: msg,
         variant: "destructive",
       });
     } finally {
