@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { Button } from "./ui/button";
-import shoshLogo from "@/assets/shosh-logo.jpg";
+import shoshLogo from "@/assets/shosh-logo.png";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -13,6 +13,7 @@ const Navigation = () => {
     { name: "About", path: "/about" },
     { name: "Our Founder", path: "/founder" },
     { name: "Values", path: "/values" },
+    { name: "Councillor", path: "/councillor" },
     { name: "Contact", path: "/contact" },
   ];
 
@@ -44,7 +45,7 @@ const Navigation = () => {
             ))}
             <Link to="/membership" className="hover-scale inline-block">
               <Button variant="hero" size="sm">
-                Join the Movement
+                Join Shosh
               </Button>
             </Link>
           </div>
@@ -78,7 +79,7 @@ const Navigation = () => {
             ))}
             <Link to="/membership" onClick={() => setIsOpen(false)}>
               <Button variant="hero" size="sm" className="w-full mt-4">
-                Join the Movement
+                Join Shosh
               </Button>
             </Link>
           </div>

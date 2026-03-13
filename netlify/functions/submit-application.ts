@@ -30,6 +30,40 @@ const json = (statusCode: number, body: unknown) => ({
   body: JSON.stringify(body),
 });
 
+const sendViaResend = async (args: {
+  to: string;
+  subject: string;
+  html: string;
+  text?: string;
+}): Promise<void> => {
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.RESEND_FROM;
+
+  if (!apiKey || !from) {
+    throw new Error("Missing RESEND_API_KEY or RESEND_FROM env var");
+  }
+
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from,
+      to: [args.to],
+      subject: args.subject,
+      html: args.html,
+      text: args.text,
+    }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "Resend API call failed");
+  }
+};
+
 export const handler: Handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return json(200, {});
   if (event.httpMethod !== "POST") return json(405, { error: "Method not allowed" });
@@ -62,7 +96,40 @@ export const handler: Handler = async (event) => {
     };
 
     await blobStore.setJSON(key, blobValue);
-    return json(200, { success: true, application: blobValue });
+
+    let emailSent = false;
+    let emailError: string | null = null;
+
+    try {
+      const html = `
+        <h2>New Membership Application</h2>
+        <p><strong>Membership Number:</strong> ${blobValue.membership_number}</p>
+        <p><strong>Name:</strong> ${blobValue.full_name} ${blobValue.surname}</p>
+        <p><strong>ID Number:</strong> ${blobValue.id_number}</p>
+        <p><strong>Phone:</strong> ${blobValue.phone_number}</p>
+        <p><strong>Email:</strong> ${blobValue.email ?? "Not provided"}</p>
+        <p><strong>Address:</strong> ${blobValue.residential_address}</p>
+        <p><strong>Province:</strong> ${blobValue.province}</p>
+        <p><strong>City:</strong> ${blobValue.city}</p>
+        <p><strong>Area/Suburb:</strong> ${blobValue.area_suburb}</p>
+        <p><strong>Submitted:</strong> ${new Date(blobValue.created_at).toLocaleString("en-ZA")}</p>
+        <hr />
+        <p><strong>Signature:</strong></p>
+        <img src="${blobValue.signature_data_url}" alt="Signature" style="max-width: 320px; height: auto; border: 1px solid #ddd; border-radius: 8px;" />
+      `;
+
+      await sendViaResend({
+        to: "info@shosh.org.za",
+        subject: `New Membership Application - ${blobValue.membership_number}`,
+        html,
+      });
+      emailSent = true;
+    } catch (e) {
+      emailError = e instanceof Error ? e.message : String(e);
+      console.error("submit-application email error", emailError);
+    }
+
+    return json(200, { success: true, application: blobValue, emailSent, emailError });
   } catch (error) {
     console.error("submit-application error", error);
     return json(500, { error: "Internal server error" });

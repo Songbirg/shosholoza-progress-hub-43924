@@ -241,35 +241,6 @@ const Join = () => {
     `;
   };
 
-  const sendEmailToPresident = async (membershipNum: string) => {
-    const emailHTML = generateEmailHTML(membershipNum);
-    
-    // In production, this would call your backend API to send the email
-    // For now, we'll create a mailto link as a fallback
-    const subject = encodeURIComponent(`New Membership Application - ${membershipNum}`);
-    const body = encodeURIComponent(`
-New membership application received:
-
-Name: ${formData.fullName} ${formData.surname}
-Membership Number: ${membershipNum}
-Phone: ${formData.phoneNumber}
-Email: ${formData.email || "Not provided"}
-Province: ${formData.province}
-City: ${formData.city}
-
-Please check the attached details for the complete application.
-    `);
-
-    // Log the email content for development
-    console.log("Email to president@shosh.org.za:");
-    console.log(emailHTML);
-
-    // In production, replace this with actual email API call
-    // Example: await fetch('/api/send-email', { method: 'POST', body: JSON.stringify({ to: 'president@shosh.org.za', html: emailHTML }) });
-    
-    return { success: true };
-  };
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -292,9 +263,6 @@ Please check the attached details for the complete application.
     });
 
     try {
-      // Send email to president
-      await sendEmailToPresident(newMembershipNumber);
-
       const signatureDataUrl = signatureCanvasRef.current?.toDataURL("image/png") || "";
 
       const res = await fetch("/.netlify/functions/submit-application", {
@@ -313,10 +281,13 @@ Please check the attached details for the complete application.
         throw new Error(text || "Failed to submit application");
       }
 
+      const data = (await res.json()) as { emailSent?: boolean; emailError?: string | null };
       setIsSubmitted(true);
       toast({
         title: "Success!",
-        description: "Your membership has been successfully registered and sent to president@shosh.org.za",
+        description: data.emailSent
+          ? "Your membership has been successfully registered and sent to info@shosh.org.za"
+          : `Your membership was registered, but email sending failed: ${data.emailError || "Unknown error"}`,
       });
     } catch (error) {
       toast({

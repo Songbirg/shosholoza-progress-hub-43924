@@ -2,7 +2,21 @@
 
 ## Current Implementation
 
-The membership form currently logs email content to the console. To enable actual email sending to `president@shosh.org.za`, you need to set up a backend API.
+Membership and Councillor forms submit to Netlify Functions. Submissions are stored in Netlify Blob Store and can send notification emails to `info@shosh.org.za` from the backend.
+
+### Required Netlify Environment Variables (Email)
+
+Set these in Netlify: Site settings -> Environment variables
+
+- `RESEND_API_KEY`
+- `RESEND_FROM` (example: `Shosholoza <no-reply@shosh.org.za>`)
+
+### Submission Endpoints
+
+- Membership submissions:
+  - `/.netlify/functions/submit-application`
+- Councillor submissions:
+  - `/.netlify/functions/submit-councillor`
 
 ## Netlify Blob Store + Admin Dashboard
 
