@@ -79,7 +79,16 @@ export const handler: Handler = async (event) => {
       user_agent: payload.userAgent || null,
     };
 
-    await store.setJSON(key, record);
+    let stored = false;
+    let storeError: string | null = null;
+
+    try {
+      await store.setJSON(key, record);
+      stored = true;
+    } catch (e) {
+      storeError = e instanceof Error ? e.message : String(e);
+      console.error("submit-councillor store error", storeError);
+    }
 
     let emailSent = false;
     let emailError: string | null = null;
@@ -105,7 +114,7 @@ export const handler: Handler = async (event) => {
       console.error("submit-councillor email error", emailError);
     }
 
-    return json(200, { success: true, id: key, emailSent, emailError });
+    return json(200, { success: true, id: key, stored, storeError, emailSent, emailError });
   } catch (error) {
     console.error("submit-councillor error", error);
     return json(500, { error: "Internal server error" });

@@ -95,7 +95,16 @@ export const handler: Handler = async (event) => {
       user_agent: payload.userAgent || null,
     };
 
-    await blobStore.setJSON(key, blobValue);
+    let stored = false;
+    let storeError: string | null = null;
+
+    try {
+      await blobStore.setJSON(key, blobValue);
+      stored = true;
+    } catch (e) {
+      storeError = e instanceof Error ? e.message : String(e);
+      console.error("submit-application store error", storeError);
+    }
 
     let emailSent = false;
     let emailError: string | null = null;
@@ -129,7 +138,7 @@ export const handler: Handler = async (event) => {
       console.error("submit-application email error", emailError);
     }
 
-    return json(200, { success: true, application: blobValue, emailSent, emailError });
+    return json(200, { success: true, application: blobValue, stored, storeError, emailSent, emailError });
   } catch (error) {
     console.error("submit-application error", error);
     return json(500, { error: "Internal server error" });
