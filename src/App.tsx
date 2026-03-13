@@ -12,6 +12,7 @@ import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 import ViralShare from "./pages/ViralShare";
 import AdminApplications from "./pages/AdminApplications";
+import AdminCouncillors from "./pages/AdminCouncillors";
 import Councillor from "./pages/Councillor";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/home" element={<Index />} />
           <Route path="/share" element={<ViralShare />} />
           <Route path="/admin/applications" element={<AdminApplications />} />
+          <Route path="/admin/councillors" element={<AdminCouncillors />} />
           <Route path="/councillor" element={<Councillor />} />
           <Route path="/about" element={<About />} />
           <Route path="/founder" element={<Founder />} />

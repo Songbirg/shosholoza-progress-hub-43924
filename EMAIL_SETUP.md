@@ -24,16 +24,16 @@ The membership form now submits the application data to **Netlify Blob Store** v
 
 - `/.netlify/functions/submit-application` (stores the application as a JSON blob keyed by membership number)
 - `/.netlify/functions/admin-list-applications` (lists all application blobs for the admin dashboard)
+- `/.netlify/functions/admin-list-councillor-applications` (lists all councillor application blobs for the admin dashboard)
 
 Admin dashboard route:
 
-- `/admin/applications` (password-gated)
+- `/admin/applications`
+- `/admin/councillors`
 
-### Required Netlify Environment Variable
+### Admin access
 
-Set this in Netlify: Site settings -> Environment variables
-
-- `ADMIN_PASSWORD` (choose a password for the admin dashboard)
+The admin listing endpoints and pages are currently not password-gated.
 
 ### How it works
 
@@ -113,11 +113,7 @@ The form generates a beautifully formatted HTML email with:
 
 ## Testing
 
-Currently, the email HTML is logged to the browser console. You can:
-1. Open browser DevTools (F12)
-2. Submit a membership form
-3. Copy the HTML from console
-4. Save as .html file to preview the email
+Form submissions are sent to Netlify Functions which store the submission and attempt to send an email via Resend.
 
 ## Security Notes
 

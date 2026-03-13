@@ -5,30 +5,26 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 
-type ApplicationRow = {
+type CouncillorRow = {
   id: string;
   created_at: string;
-  membership_number: string;
-  full_name: string;
-  surname: string;
-  id_number: string;
-  phone_number: string;
-  email: string | null;
-  province: string;
-  city: string;
+  name: string;
+  email: string;
+  phone: string;
+  municipality: string;
 };
 
-const AdminApplications = () => {
+const AdminCouncillors = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [applications, setApplications] = useState<ApplicationRow[]>([]);
+  const [applications, setApplications] = useState<CouncillorRow[]>([]);
 
   const sorted = useMemo(() => applications, [applications]);
 
   const load = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/.netlify/functions/admin-list-applications", {
+      const res = await fetch("/.netlify/functions/admin-list-councillor-applications", {
         method: "GET",
       });
 
@@ -37,7 +33,7 @@ const AdminApplications = () => {
         throw new Error(`HTTP ${res.status} ${res.statusText}${text ? `: ${text}` : ""}`);
       }
 
-      const data = (await res.json()) as { applications: ApplicationRow[] };
+      const data = (await res.json()) as { applications: CouncillorRow[] };
       setApplications(Array.isArray(data.applications) ? data.applications : []);
     } catch (e) {
       setApplications([]);
@@ -57,7 +53,7 @@ const AdminApplications = () => {
       <Navigation />
       <main className="flex-1">
         <div className="max-w-6xl mx-auto px-4 py-10">
-          <h1 className="text-3xl font-bold mb-2">Member Applications</h1>
+          <h1 className="text-3xl font-bold mb-2">Councillor Applications</h1>
           <p className="text-muted-foreground mb-6">Admin dashboard</p>
 
           <div className="flex flex-col sm:flex-row gap-3 sm:items-center mb-6">
@@ -71,20 +67,16 @@ const AdminApplications = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Submitted</TableHead>
-                  <TableHead>Membership #</TableHead>
-                  <TableHead>Full name</TableHead>
-                  <TableHead>Surname</TableHead>
-                  <TableHead>ID number</TableHead>
-                  <TableHead>Phone</TableHead>
+                  <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>Province</TableHead>
-                  <TableHead>City</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Municipality</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {sorted.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center text-muted-foreground">
+                    <TableCell colSpan={5} className="text-center text-muted-foreground">
                       {loading ? "Loading..." : "No applications loaded"}
                     </TableCell>
                   </TableRow>
@@ -92,14 +84,10 @@ const AdminApplications = () => {
                   sorted.map((a) => (
                     <TableRow key={a.id}>
                       <TableCell>{new Date(a.created_at).toLocaleString("en-ZA")}</TableCell>
-                      <TableCell className="font-medium">{a.membership_number}</TableCell>
-                      <TableCell>{a.full_name}</TableCell>
-                      <TableCell>{a.surname}</TableCell>
-                      <TableCell>{a.id_number}</TableCell>
-                      <TableCell>{a.phone_number}</TableCell>
-                      <TableCell>{a.email || ""}</TableCell>
-                      <TableCell>{a.province}</TableCell>
-                      <TableCell>{a.city}</TableCell>
+                      <TableCell className="font-medium">{a.name}</TableCell>
+                      <TableCell>{a.email}</TableCell>
+                      <TableCell>{a.phone}</TableCell>
+                      <TableCell>{a.municipality}</TableCell>
                     </TableRow>
                   ))
                 )}
@@ -113,4 +101,4 @@ const AdminApplications = () => {
   );
 };
 
-export default AdminApplications;
+export default AdminCouncillors;

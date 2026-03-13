@@ -17,7 +17,7 @@ export const handler: Handler = async (event) => {
   if (event.httpMethod !== "GET") return json(405, { error: "Method not allowed" });
 
   try {
-    const blobStore = getStore("member-applications");
+    const blobStore = getStore("councillor-applications");
     const list = await blobStore.list();
     const blobs = list.blobs || [];
 
@@ -36,7 +36,7 @@ export const handler: Handler = async (event) => {
 
     return json(200, { applications: sorted });
   } catch (error) {
-    console.error("admin-list-applications error", error);
+    console.error("admin-list-councillor-applications error", error);
     return json(500, { error: "Internal server error" });
   }
 };
