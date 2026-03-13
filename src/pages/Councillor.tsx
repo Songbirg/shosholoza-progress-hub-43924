@@ -46,7 +46,7 @@ const Councillor = () => {
 
       if (!res.ok) {
         const text = await res.text();
-        throw new Error(text || "Failed to submit councillor application");
+        throw new Error(`HTTP ${res.status} ${res.statusText}${text ? `: ${text}` : ""}`);
       }
 
       const data = (await res.json()) as { emailSent?: boolean; emailError?: string | null };
@@ -61,10 +61,11 @@ const Councillor = () => {
       setEmail("");
       setPhone("");
       setMunicipality("");
-    } catch {
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
       toast({
         title: "Error",
-        description: "There was an issue submitting your application. Please try again.",
+        description: msg,
         variant: "destructive",
       });
     }
