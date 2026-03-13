@@ -278,7 +278,7 @@ const Join = () => {
 
       if (!res.ok) {
         const text = await res.text();
-        throw new Error(text || "Failed to submit application");
+        throw new Error(`HTTP ${res.status} ${res.statusText}${text ? `: ${text}` : ""}`);
       }
 
       const data = (await res.json()) as { emailSent?: boolean; emailError?: string | null };
@@ -290,9 +290,10 @@ const Join = () => {
           : `Your membership was registered, but email sending failed: ${data.emailError || "Unknown error"}`,
       });
     } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
       toast({
         title: "Error",
-        description: "There was an issue submitting your application. Please try again.",
+        description: msg,
         variant: "destructive",
       });
     }
