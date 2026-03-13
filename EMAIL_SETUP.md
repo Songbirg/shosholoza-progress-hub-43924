@@ -35,6 +35,13 @@ Admin dashboard route:
 
 The admin listing endpoints and pages are currently not password-gated.
 
+### Required Netlify Environment Variables (Blob Store)
+
+Set these in Netlify: Site settings -> Environment variables
+
+- `NETLIFY_SITE_ID` (or `SITE_ID`)
+- `NETLIFY_API_TOKEN`
+
 ### How it works
 
 - Each submitted application is stored as a JSON blob in the `member-applications` blob store

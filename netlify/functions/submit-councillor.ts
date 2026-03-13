@@ -1,5 +1,5 @@
 import { Handler } from "@netlify/functions";
-import { getStore } from "@netlify/blobs";
+import { getConfiguredStore } from "./_blobs";
 
 type CouncillorPayload = {
   name: string;
@@ -47,7 +47,7 @@ export const handler: Handler = async (event) => {
     let storeError: string | null = null;
 
     try {
-      const store = getStore("councillor-applications");
+      const store = getConfiguredStore("councillor-applications");
       await store.setJSON(key, record);
       stored = true;
     } catch (e) {

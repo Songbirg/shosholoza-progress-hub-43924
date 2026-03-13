@@ -1,5 +1,5 @@
 import { Handler } from "@netlify/functions";
-import { getStore } from "@netlify/blobs";
+import { getConfiguredStore } from "./_blobs";
 
 const json = (statusCode: number, body: unknown) => ({
   statusCode,
@@ -17,7 +17,7 @@ export const handler: Handler = async (event) => {
   if (event.httpMethod !== "GET") return json(405, { error: "Method not allowed" });
 
   try {
-    const blobStore = getStore("member-applications");
+    const blobStore = getConfiguredStore("member-applications");
     const list = await blobStore.list();
     const blobs = list.blobs || [];
 

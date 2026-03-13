@@ -1,5 +1,5 @@
 import { Handler } from "@netlify/functions";
-import { getStore } from "@netlify/blobs";
+import { getConfiguredStore } from "./_blobs";
 
 type ApplicationPayload = {
   membershipNumber: string;
@@ -63,7 +63,7 @@ export const handler: Handler = async (event) => {
     let storeError: string | null = null;
 
     try {
-      const blobStore = getStore("member-applications");
+      const blobStore = getConfiguredStore("member-applications");
       await blobStore.setJSON(key, blobValue);
       stored = true;
     } catch (e) {
