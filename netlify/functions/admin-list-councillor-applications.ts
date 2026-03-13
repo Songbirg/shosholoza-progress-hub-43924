@@ -37,6 +37,7 @@ export const handler: Handler = async (event) => {
     return json(200, { applications: sorted });
   } catch (error) {
     console.error("admin-list-councillor-applications error", error);
-    return json(500, { error: "Internal server error" });
+    const detail = error instanceof Error ? error.message : String(error);
+    return json(500, { error: "Internal server error", detail });
   }
 };

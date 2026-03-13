@@ -49,12 +49,12 @@ const Councillor = () => {
         throw new Error(`HTTP ${res.status} ${res.statusText}${text ? `: ${text}` : ""}`);
       }
 
-      const data = (await res.json()) as { emailSent?: boolean; emailError?: string | null };
+      const data = (await res.json()) as { stored?: boolean; storeError?: string | null };
       toast({
         title: "Application received",
-        description: data.emailSent
-          ? "Your application has been received and sent to info@shosh.org.za"
-          : `Your application was received, but email sending failed: ${data.emailError || "Unknown error"}`,
+        description: data.stored
+          ? "Your application has been received."
+          : `Your application was received, but saving failed: ${data.storeError || "Unknown error"}`,
       });
 
       setName("");

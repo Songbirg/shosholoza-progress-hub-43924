@@ -281,13 +281,13 @@ const Join = () => {
         throw new Error(`HTTP ${res.status} ${res.statusText}${text ? `: ${text}` : ""}`);
       }
 
-      const data = (await res.json()) as { emailSent?: boolean; emailError?: string | null };
+      const data = (await res.json()) as { stored?: boolean; storeError?: string | null };
       setIsSubmitted(true);
       toast({
         title: "Success!",
-        description: data.emailSent
-          ? "Your membership has been successfully registered and sent to info@shosh.org.za"
-          : `Your membership was registered, but email sending failed: ${data.emailError || "Unknown error"}`,
+        description: data.stored
+          ? "Your membership has been successfully registered."
+          : `Your membership was received, but saving failed: ${data.storeError || "Unknown error"}`,
       });
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
