@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -38,7 +38,7 @@ const AdminApplications = () => {
       setApplications(Array.isArray(data) ? data : []);
       toast({
         title: "Loaded",
-        description: `${data.length} applications loaded from localStorage.`,
+        description: `${Array.isArray(data) ? data.length : 0} applications loaded from localStorage. (${window.location.origin})`,
       });
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -49,6 +49,11 @@ const AdminApplications = () => {
       });
     }
   };
+
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const exportToCSV = () => {
     if (applications.length === 0) {

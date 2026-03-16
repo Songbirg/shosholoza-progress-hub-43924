@@ -289,6 +289,14 @@ const Join = () => {
       existing.push(application);
       localStorage.setItem("shosh_membership_applications", JSON.stringify(existing));
 
+      const storedAfter = localStorage.getItem("shosh_membership_applications");
+      const parsedAfter = storedAfter ? JSON.parse(storedAfter) : [];
+      console.log("membership stored", {
+        origin: window.location.origin,
+        count: Array.isArray(parsedAfter) ? parsedAfter.length : 0,
+        lastId: application.id,
+      });
+
       // Send email notification (optional - best effort)
       let emailSent = false;
       let emailError = null;
@@ -315,6 +323,11 @@ const Join = () => {
         description: emailSent
           ? "Your membership has been successfully registered and notification sent."
           : "Your membership has been successfully registered.",
+      });
+
+      toast({
+        title: "Saved locally",
+        description: `${Array.isArray(parsedAfter) ? parsedAfter.length : 0} application(s) saved in this browser. (${window.location.origin})`,
       });
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
