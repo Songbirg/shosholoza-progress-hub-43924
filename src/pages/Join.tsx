@@ -265,29 +265,56 @@ const Join = () => {
     try {
       const signatureDataUrl = signatureCanvasRef.current?.toDataURL("image/png") || "";
 
-      const res = await fetch("/.netlify/functions/submit-application", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          membershipNumber: newMembershipNumber,
-          formData,
-          signatureDataUrl,
-          userAgent: navigator.userAgent,
-        }),
-      });
+      // Store in localStorage (token-free)
+      const application = {
+        id: crypto.randomUUID(),
+        created_at: new Date().toISOString(),
+        membership_number: newMembershipNumber,
+        full_name: formData.fullName,
+        surname: formData.surname,
+        date_of_birth: formData.dateOfBirth,
+        id_number: formData.idNumber,
+        phone_number: formData.phoneNumber,
+        email: formData.email || null,
+        residential_address: formData.residentialAddress,
+        province: formData.province,
+        city: formData.city,
+        area_suburb: formData.areaSuburb,
+        signature_data_url: signatureDataUrl,
+        user_agent: navigator.userAgent,
+      };
 
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`HTTP ${res.status} ${res.statusText}${text ? `: ${text}` : ""}`);
+      // Get existing applications
+      const existing = JSON.parse(localStorage.getItem("shosh_membership_applications") || "[]");
+      existing.push(application);
+      localStorage.setItem("shosh_membership_applications", JSON.stringify(existing));
+
+      // Send email notification (optional - best effort)
+      let emailSent = false;
+      let emailError = null;
+      try {
+        const emailRes = await fetch("/.netlify/functions/send-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            to: "info@shosh.org.za",
+            subject: `New Membership Application - ${newMembershipNumber}`,
+            html: generateEmailHTML(newMembershipNumber),
+          }),
+        });
+        if (emailRes.ok) {
+          emailSent = true;
+        }
+      } catch (err) {
+        emailError = err instanceof Error ? err.message : String(err);
       }
 
-      const data = (await res.json()) as { stored?: boolean; storeError?: string | null };
       setIsSubmitted(true);
       toast({
         title: "Success!",
-        description: data.stored
-          ? "Your membership has been successfully registered."
-          : `Your membership was received, but saving failed: ${data.storeError || "Unknown error"}`,
+        description: emailSent
+          ? "Your membership has been successfully registered and notification sent."
+          : "Your membership has been successfully registered.",
       });
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);

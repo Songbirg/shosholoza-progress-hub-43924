@@ -4,6 +4,7 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
+import { Download } from "lucide-react";
 
 type ApplicationRow = {
   id: string;
@@ -20,35 +21,86 @@ type ApplicationRow = {
 
 const AdminApplications = () => {
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
   const [applications, setApplications] = useState<ApplicationRow[]>([]);
 
-  const sorted = useMemo(() => applications, [applications]);
+  const sorted = useMemo(() => {
+    return [...applications].sort((a, b) => {
+      const aDate = new Date(a.created_at).getTime();
+      const bDate = new Date(b.created_at).getTime();
+      return bDate - aDate;
+    });
+  }, [applications]);
 
-  const load = async () => {
-    setLoading(true);
+  const load = () => {
     try {
-      const res = await fetch("/.netlify/functions/admin-list-applications", {
-        method: "GET",
+      const stored = localStorage.getItem("shosh_membership_applications");
+      const data = stored ? JSON.parse(stored) : [];
+      setApplications(Array.isArray(data) ? data : []);
+      toast({
+        title: "Loaded",
+        description: `${data.length} applications loaded from localStorage.`,
       });
-
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`HTTP ${res.status} ${res.statusText}${text ? `: ${text}` : ""}`);
-      }
-
-      const data = (await res.json()) as { applications: ApplicationRow[] };
-      setApplications(Array.isArray(data.applications) ? data.applications : []);
     } catch (e) {
-      setApplications([]);
       const msg = e instanceof Error ? e.message : String(e);
       toast({
         title: "Error",
         description: msg,
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
+    }
+  };
+
+  const exportToCSV = () => {
+    if (applications.length === 0) {
+      toast({
+        title: "No data",
+        description: "No applications to export.",
+      });
+      return;
+    }
+
+    const headers = ["ID", "Created At", "Membership Number", "Full Name", "Surname", "ID Number", "Phone", "Email", "Province", "City"];
+    const rows = applications.map((a) => [
+      a.id,
+      a.created_at,
+      a.membership_number,
+      a.full_name,
+      a.surname,
+      a.id_number,
+      a.phone_number,
+      a.email || "",
+      a.province,
+      a.city,
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `shosh-membership-applications-${new Date().toISOString().split("T")[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "Exported",
+      description: "Applications exported to CSV.",
+    });
+  };
+
+  const clearAll = () => {
+    if (confirm("Are you sure you want to clear all applications from localStorage?")) {
+      localStorage.removeItem("shosh_membership_applications");
+      setApplications([]);
+      toast({
+        title: "Cleared",
+        description: "All applications cleared from localStorage.",
+      });
     }
   };
 
@@ -58,11 +110,18 @@ const AdminApplications = () => {
       <main className="flex-1">
         <div className="max-w-6xl mx-auto px-4 py-10">
           <h1 className="text-3xl font-bold mb-2">Member Applications</h1>
-          <p className="text-muted-foreground mb-6">Admin dashboard</p>
+          <p className="text-muted-foreground mb-6">Admin dashboard (localStorage)</p>
 
           <div className="flex flex-col sm:flex-row gap-3 sm:items-center mb-6">
-            <Button onClick={load} disabled={loading}>
-              {loading ? "Loading..." : "Load applications"}
+            <Button onClick={load} variant="default">
+              Load from localStorage
+            </Button>
+            <Button onClick={exportToCSV} variant="outline" disabled={applications.length === 0}>
+              <Download className="w-4 h-4 mr-2" />
+              Export CSV
+            </Button>
+            <Button onClick={clearAll} variant="destructive" disabled={applications.length === 0}>
+              Clear All
             </Button>
           </div>
 
@@ -85,7 +144,7 @@ const AdminApplications = () => {
                 {sorted.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center text-muted-foreground">
-                      {loading ? "Loading..." : "No applications loaded"}
+                      No applications loaded. Click "Load from localStorage" to view.
                     </TableCell>
                   </TableRow>
                 ) : (

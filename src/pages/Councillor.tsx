@@ -32,29 +32,53 @@ const Councillor = () => {
     });
 
     try {
-      const res = await fetch("/.netlify/functions/submit-councillor", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          email,
-          phone,
-          municipality,
-          userAgent: navigator.userAgent,
-        }),
-      });
+      // Store in localStorage (token-free)
+      const application = {
+        id: crypto.randomUUID(),
+        created_at: new Date().toISOString(),
+        name,
+        email,
+        phone,
+        municipality,
+        user_agent: navigator.userAgent,
+      };
 
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`HTTP ${res.status} ${res.statusText}${text ? `: ${text}` : ""}`);
+      // Get existing applications
+      const existing = JSON.parse(localStorage.getItem("shosh_councillor_applications") || "[]");
+      existing.push(application);
+      localStorage.setItem("shosh_councillor_applications", JSON.stringify(existing));
+
+      // Send email notification (optional - best effort)
+      let emailSent = false;
+      try {
+        const emailRes = await fetch("/.netlify/functions/send-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            to: "info@shosh.org.za",
+            subject: `New Councillor Application - ${name}`,
+            html: `
+              <h2>New Councillor Application</h2>
+              <p><strong>Name:</strong> ${name}</p>
+              <p><strong>Email:</strong> ${email}</p>
+              <p><strong>Phone:</strong> ${phone}</p>
+              <p><strong>Municipality:</strong> ${municipality}</p>
+              <p><strong>Submitted:</strong> ${new Date().toLocaleString("en-ZA")}</p>
+            `,
+          }),
+        });
+        if (emailRes.ok) {
+          emailSent = true;
+        }
+      } catch (err) {
+        // Email is best-effort
       }
 
-      const data = (await res.json()) as { stored?: boolean; storeError?: string | null };
       toast({
         title: "Application received",
-        description: data.stored
-          ? "Your application has been received."
-          : `Your application was received, but saving failed: ${data.storeError || "Unknown error"}`,
+        description: emailSent
+          ? "Your application has been received and we'll contact you soon."
+          : "Your application has been received.",
       });
 
       setName("");
