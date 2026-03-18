@@ -3,8 +3,15 @@ import shoshLogo from "@/assets/shosh-logo.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
 
 const Councillor = () => {
   const { toast } = useToast();
@@ -17,7 +24,10 @@ const Councillor = () => {
   const [municipality, setMunicipality] = useState<string>("");
 
   const canNext = useMemo(() => {
-    if (step === 1) return Boolean(name.trim()) && Boolean(email.trim()) && Boolean(phone.trim());
+    if (step === 1)
+      return (
+        Boolean(name.trim()) && Boolean(email.trim()) && Boolean(phone.trim())
+      );
     if (step === 2) return Boolean(municipality);
     return true;
   }, [email, municipality, name, phone, step]);
@@ -26,12 +36,14 @@ const Councillor = () => {
     if (!canNext) {
       toast({
         title: "Form Incomplete",
-        description: step === 2 ? "Please select a preferred municipality." : "Please complete all fields.",
+        description:
+          step === 2
+            ? "Please select a preferred municipality."
+            : "Please complete all fields.",
         variant: "destructive",
       });
       return;
     }
-
     setStep((s) => (s === 1 ? 2 : 3));
   };
 
@@ -59,28 +71,32 @@ const Councillor = () => {
     setSubmitting(true);
 
     try {
-      const application = {
-        id: crypto.randomUUID(),
-        created_at: new Date().toISOString(),
-        name,
-        email,
-        phone,
-        municipality,
-        user_agent: navigator.userAgent,
-      };
+      // ── Save to Supabase ────────────────────────────────────────────────────
+      const { data, error } = await supabase
+        .from("councillor_applications")
+        .insert({
+          name: name.trim(),
+          email: email.trim(),
+          phone: phone.trim(),
+          municipality,
+          status: "pending",
+          user_agent: navigator.userAgent,
+        })
+        .select("id")
+        .single();
 
-      const existing = JSON.parse(localStorage.getItem("shosh_councillor_applications") || "[]");
-      existing.push(application);
-      localStorage.setItem("shosh_councillor_applications", JSON.stringify(existing));
+      if (error) {
+        throw new Error(`Database error: ${error.message}`);
+      }
 
-      let emailSent = false;
+      // ── Optional email notification (best-effort) ───────────────────────────
       try {
-        const emailRes = await fetch("/.netlify/functions/send-email", {
+        await fetch("/.netlify/functions/send-email", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             to: "info@shosh.org.za",
-            subject: `New Councillor Application - ${name}`,
+            subject: `New Councillor Application – ${name}`,
             html: `
               <h2>New Councillor Application</h2>
               <p><strong>Name:</strong> ${name}</p>
@@ -91,22 +107,20 @@ const Councillor = () => {
             `,
           }),
         });
-        if (emailRes.ok) {
-          emailSent = true;
-        }
-      } catch (err) {
+      } catch {
+        // Email is best-effort — do not block submission
       }
 
       toast({
-        title: "Application received",
-        description: emailSent ? "We’ll contact you soon." : "Saved successfully.",
+        title: "Application received!",
+        description: "We'll be in touch with you soon.",
       });
 
-      setSubmittedId(application.id);
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
+      setSubmittedId(data?.id ?? crypto.randomUUID());
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
       toast({
-        title: "Error",
+        title: "Submission failed",
         description: msg,
         variant: "destructive",
       });
@@ -150,6 +164,7 @@ const Councillor = () => {
         }}
       >
         <div className="max-w-6xl mx-auto px-4 py-14">
+          {/* Header */}
           <header className="text-center mb-10">
             <div
               className="mx-auto inline-flex items-center justify-center rounded-2xl p-3"
@@ -172,22 +187,54 @@ const Councillor = () => {
 
           <section className="max-w-3xl mx-auto">
             <div className="rounded-3xl border border-white/10 bg-black/25 backdrop-blur-sm p-6 md:p-10 shadow-2xl">
+              {/* ── Success state ─────────────────────────────────────────── */}
               {submittedId ? (
                 <div className="text-center">
-                  <h2 className="text-3xl md:text-4xl font-extrabold" style={{ color: "var(--c-gold)" }}>
-                    Application submitted
+                  <div className="mx-auto mb-6 flex items-center justify-center w-20 h-20 rounded-full bg-green-500/20 border-2 border-green-400">
+                    <svg
+                      className="w-10 h-10 text-green-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2.5}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  </div>
+                  <h2
+                    className="text-3xl md:text-4xl font-extrabold"
+                    style={{ color: "var(--c-gold)" }}
+                  >
+                    Application submitted!
                   </h2>
-                  <p className="mt-3 opacity-90">Reference: {submittedId}</p>
+                  <p className="mt-3 opacity-80 text-base">
+                    Thank you, <strong>{name}</strong>. We'll contact you at{" "}
+                    <strong>{email}</strong> as soon as possible.
+                  </p>
+                  <p className="mt-2 text-xs opacity-50 font-mono">
+                    Ref: {submittedId}
+                  </p>
                   <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <Button
                       type="button"
                       className="w-full text-lg font-bold py-6 rounded-xl"
-                      style={{ backgroundColor: "var(--c-gold)", color: "#111" }}
+                      style={{
+                        backgroundColor: "var(--c-gold)",
+                        color: "#111",
+                      }}
                       onClick={reset}
                     >
                       Submit another
                     </Button>
-                    <Button type="button" className="w-full text-lg font-bold py-6 rounded-xl" variant="secondary" onClick={() => (window.location.href = "/")}
+                    <Button
+                      type="button"
+                      className="w-full text-lg font-bold py-6 rounded-xl"
+                      variant="secondary"
+                      onClick={() => (window.location.href = "/")}
                     >
                       Back home
                     </Button>
@@ -195,17 +242,26 @@ const Councillor = () => {
                 </div>
               ) : (
                 <>
+                  {/* ── Step header ──────────────────────────────────────── */}
                   <div className="text-center">
                     <p className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 text-sm opacity-95">
-                      <span className="font-semibold" style={{ color: "var(--c-gold)" }}>
+                      <span
+                        className="font-semibold"
+                        style={{ color: "var(--c-gold)" }}
+                      >
                         Step {step} of 3
                       </span>
                       <span className="opacity-80">Councillor application</span>
                     </p>
-                    <h2 className="mt-5 text-3xl md:text-5xl font-extrabold leading-tight" style={{ color: "var(--c-gold)" }}>
+                    <h2
+                      className="mt-5 text-3xl md:text-5xl font-extrabold leading-tight"
+                      style={{ color: "var(--c-gold)" }}
+                    >
                       Become a Councillor
                     </h2>
-                    <p className="mt-3 text-base md:text-lg opacity-90">Complete the form and we’ll contact you ASAP.</p>
+                    <p className="mt-3 text-base md:text-lg opacity-90">
+                      Complete the form and we'll contact you ASAP.
+                    </p>
                     <div className="mt-6">
                       <div
                         className="h-[3px] rounded-full"
@@ -217,7 +273,9 @@ const Councillor = () => {
                     </div>
                   </div>
 
+                  {/* ── Form ─────────────────────────────────────────────── */}
                   <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+                    {/* Step 1 – Personal details */}
                     {step === 1 && (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div className="space-y-2">
@@ -265,17 +323,25 @@ const Councillor = () => {
                       </div>
                     )}
 
+                    {/* Step 2 – Municipality */}
                     {step === 2 && (
                       <div className="space-y-5">
                         <div className="space-y-2">
-                          <Label className="text-white">Preferred municipality</Label>
-                          <Select value={municipality} onValueChange={setMunicipality}>
+                          <Label className="text-white">
+                            Preferred municipality
+                          </Label>
+                          <Select
+                            value={municipality}
+                            onValueChange={setMunicipality}
+                          >
                             <SelectTrigger className="bg-white/5 border-white/10 text-white">
                               <SelectValue placeholder="Select municipality" />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="joburg">Joburg</SelectItem>
-                              <SelectItem value="ekurhuleni">Ekurhuleni</SelectItem>
+                              <SelectItem value="ekurhuleni">
+                                Ekurhuleni
+                              </SelectItem>
                               <SelectItem value="tshwane">Tshwane</SelectItem>
                             </SelectContent>
                           </Select>
@@ -284,46 +350,62 @@ const Councillor = () => {
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                           <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                             <p className="text-sm opacity-75">Name</p>
-                            <p className="mt-1 font-semibold break-words">{name || "-"}</p>
+                            <p className="mt-1 font-semibold break-words">
+                              {name || "-"}
+                            </p>
                           </div>
                           <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                             <p className="text-sm opacity-75">Phone</p>
-                            <p className="mt-1 font-semibold break-words">{phone || "-"}</p>
+                            <p className="mt-1 font-semibold break-words">
+                              {phone || "-"}
+                            </p>
                           </div>
                           <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                             <p className="text-sm opacity-75">Email</p>
-                            <p className="mt-1 font-semibold break-words">{email || "-"}</p>
+                            <p className="mt-1 font-semibold break-words">
+                              {email || "-"}
+                            </p>
                           </div>
                         </div>
                       </div>
                     )}
 
+                    {/* Step 3 – Review & submit */}
                     {step === 3 && (
                       <div className="space-y-4">
                         <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-                          <p className="text-sm opacity-75">Review</p>
-                          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <p className="text-sm opacity-75 mb-4">Review</p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                               <p className="text-xs opacity-70">Full name</p>
-                              <p className="font-semibold break-words">{name}</p>
+                              <p className="font-semibold break-words">
+                                {name}
+                              </p>
                             </div>
                             <div>
                               <p className="text-xs opacity-70">Phone</p>
-                              <p className="font-semibold break-words">{phone}</p>
+                              <p className="font-semibold break-words">
+                                {phone}
+                              </p>
                             </div>
                             <div>
                               <p className="text-xs opacity-70">Email</p>
-                              <p className="font-semibold break-words">{email}</p>
+                              <p className="font-semibold break-words">
+                                {email}
+                              </p>
                             </div>
                             <div>
                               <p className="text-xs opacity-70">Municipality</p>
-                              <p className="font-semibold break-words">{municipality}</p>
+                              <p className="font-semibold break-words capitalize">
+                                {municipality}
+                              </p>
                             </div>
                           </div>
                         </div>
                       </div>
                     )}
 
+                    {/* Navigation buttons */}
                     <div className="flex flex-col sm:flex-row gap-3 pt-2">
                       <Button
                         type="button"
@@ -340,21 +422,31 @@ const Councillor = () => {
                         style={{
                           backgroundColor: "var(--c-gold)",
                           color: "#111",
-                          boxShadow: "0 0 0 rgba(212,175,55,0)",
                         }}
                         disabled={submitting}
                         onClick={step === 3 ? undefined : next}
                         onMouseEnter={(e) => {
-                          (e.currentTarget as HTMLButtonElement).style.boxShadow =
-                            "0 0 30px rgba(212,175,55,0.45)";
-                          (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
+                          (
+                            e.currentTarget as HTMLButtonElement
+                          ).style.boxShadow = "0 0 30px rgba(212,175,55,0.45)";
+                          (
+                            e.currentTarget as HTMLButtonElement
+                          ).style.transform = "translateY(-1px)";
                         }}
                         onMouseLeave={(e) => {
-                          (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 0 rgba(212,175,55,0)";
-                          (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0px)";
+                          (
+                            e.currentTarget as HTMLButtonElement
+                          ).style.boxShadow = "0 0 0 rgba(212,175,55,0)";
+                          (
+                            e.currentTarget as HTMLButtonElement
+                          ).style.transform = "translateY(0px)";
                         }}
                       >
-                        {submitting ? "Submitting..." : step === 3 ? "Submit application" : "Continue"}
+                        {submitting
+                          ? "Submitting…"
+                          : step === 3
+                            ? "Submit application"
+                            : "Continue"}
                       </Button>
                     </div>
                   </form>

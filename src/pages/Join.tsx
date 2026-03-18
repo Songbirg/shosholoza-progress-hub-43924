@@ -5,10 +5,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle2, Download, ChevronRight, ChevronLeft, User, MapPin, FileCheck } from "lucide-react";
-import jsPDF from "jspdf";
+import {
+  CheckCircle2,
+  Download,
+  ChevronRight,
+  ChevronLeft,
+  User,
+  MapPin,
+  FileCheck,
+} from "lucide-react";
+import jsPDF, { type TextOptionsLight } from "jspdf";
+import { supabase } from "@/lib/supabase";
 
 const Join = () => {
   const { toast } = useToast();
@@ -63,14 +78,17 @@ const Join = () => {
     const newErrors: Record<string, string> = {};
 
     if (step === 1) {
-      if (!formData.fullName.trim()) newErrors.fullName = "Full name is required";
+      if (!formData.fullName.trim())
+        newErrors.fullName = "Full name is required";
       if (!formData.surname.trim()) newErrors.surname = "Surname is required";
-      if (!formData.dateOfBirth) newErrors.dateOfBirth = "Date of birth is required";
+      if (!formData.dateOfBirth)
+        newErrors.dateOfBirth = "Date of birth is required";
       if (!validateIdNumber(formData.idNumber)) {
         newErrors.idNumber = "ID number must be exactly 13 digits";
       }
       if (!validatePhoneNumber(formData.phoneNumber)) {
-        newErrors.phoneNumber = "Phone number must be a valid SA number (+27XXXXXXXXX)";
+        newErrors.phoneNumber =
+          "Phone number must be a valid SA number (+27XXXXXXXXX)";
       }
     }
 
@@ -80,7 +98,8 @@ const Join = () => {
       }
       if (!formData.province) newErrors.province = "Province is required";
       if (!formData.city.trim()) newErrors.city = "City is required";
-      if (!formData.areaSuburb.trim()) newErrors.areaSuburb = "Area/Suburb is required";
+      if (!formData.areaSuburb.trim())
+        newErrors.areaSuburb = "Area/Suburb is required";
     }
 
     if (step === 3) {
@@ -121,13 +140,15 @@ const Join = () => {
 
   const generateMembershipNumber = (): string => {
     const timestamp = Date.now().toString().slice(-8);
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, "0");
+    const random = Math.floor(Math.random() * 1000)
+      .toString()
+      .padStart(3, "0");
     return `SHOSH-${timestamp}-${random}`;
   };
 
   const generateEmailHTML = (membershipNum: string): string => {
     const signatureDataUrl = signatureCanvasRef.current?.toDataURL() || "";
-    
+
     return `
       <!DOCTYPE html>
       <html>
@@ -159,7 +180,7 @@ const Join = () => {
           <p>MEMBERSHIP APPLICATION</p>
         </div>
         <div class="branding">Shhh...</div>
-        
+
         <div class="content">
           <div class="membership-number">
             <div class="label">Membership Number</div>
@@ -263,43 +284,35 @@ const Join = () => {
     });
 
     try {
-      const signatureDataUrl = signatureCanvasRef.current?.toDataURL("image/png") || "";
+      const signatureDataUrl =
+        signatureCanvasRef.current?.toDataURL("image/png") || "";
 
-      // Store in localStorage (token-free)
-      const application = {
-        id: crypto.randomUUID(),
-        created_at: new Date().toISOString(),
-        membership_number: newMembershipNumber,
-        full_name: formData.fullName,
-        surname: formData.surname,
-        date_of_birth: formData.dateOfBirth,
-        id_number: formData.idNumber,
-        phone_number: formData.phoneNumber,
-        email: formData.email || null,
-        residential_address: formData.residentialAddress,
-        province: formData.province,
-        city: formData.city,
-        area_suburb: formData.areaSuburb,
-        signature_data_url: signatureDataUrl,
-        user_agent: navigator.userAgent,
-      };
+      // ── Save to Supabase ──────────────────────────────────────────────────────
+      const { error: dbError } = await supabase
+        .from("membership_applications")
+        .insert({
+          membership_number: newMembershipNumber,
+          full_name: formData.fullName,
+          surname: formData.surname,
+          date_of_birth: formData.dateOfBirth,
+          id_number: formData.idNumber,
+          phone_number: formData.phoneNumber,
+          email: formData.email || null,
+          residential_address: formData.residentialAddress,
+          province: formData.province,
+          city: formData.city,
+          area_suburb: formData.areaSuburb,
+          signature_data_url: signatureDataUrl,
+          user_agent: navigator.userAgent,
+          status: "pending",
+        });
 
-      // Get existing applications
-      const existing = JSON.parse(localStorage.getItem("shosh_membership_applications") || "[]");
-      existing.push(application);
-      localStorage.setItem("shosh_membership_applications", JSON.stringify(existing));
+      if (dbError) {
+        throw new Error(`Database error: ${dbError.message}`);
+      }
 
-      const storedAfter = localStorage.getItem("shosh_membership_applications");
-      const parsedAfter = storedAfter ? JSON.parse(storedAfter) : [];
-      console.log("membership stored", {
-        origin: window.location.origin,
-        count: Array.isArray(parsedAfter) ? parsedAfter.length : 0,
-        lastId: application.id,
-      });
-
-      // Send email notification (optional - best effort)
+      // ── Send email notification (optional – best effort) ──────────────────────
       let emailSent = false;
-      let emailError = null;
       try {
         const emailRes = await fetch("/.netlify/functions/send-email", {
           method: "POST",
@@ -313,26 +326,21 @@ const Join = () => {
         if (emailRes.ok) {
           emailSent = true;
         }
-      } catch (err) {
-        emailError = err instanceof Error ? err.message : String(err);
+      } catch {
+        // Email is best-effort; don't block the submission
       }
 
       setIsSubmitted(true);
       toast({
-        title: "Success!",
+        title: "Application Submitted!",
         description: emailSent
-          ? "Your membership has been successfully registered and notification sent."
-          : "Your membership has been successfully registered.",
-      });
-
-      toast({
-        title: "Saved locally",
-        description: `${Array.isArray(parsedAfter) ? parsedAfter.length : 0} application(s) saved in this browser. (${window.location.origin})`,
+          ? "Your membership has been successfully submitted and a notification has been sent."
+          : "Your membership has been successfully submitted.",
       });
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
       toast({
-        title: "Error",
+        title: "Submission Failed",
         description: msg,
         variant: "destructive",
       });
@@ -349,21 +357,27 @@ const Join = () => {
       // Header with green background
       doc.setFillColor(21, 128, 61);
       doc.rect(0, 0, pageWidth, 45, "F");
-      
+
       // Title
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(22);
       doc.setFont("helvetica", "bold");
-      doc.text("Shosholoza Progressive Party (Shosh)", pageWidth / 2, 20, { align: "center" } as any);
-      
+      doc.text("Shosholoza Progressive Party (Shosh)", pageWidth / 2, 20, {
+        align: "center",
+      } as TextOptionsLight);
+
       doc.setFontSize(14);
       doc.setFont("helvetica", "normal");
-      doc.text("MEMBERSHIP APPLICATION", pageWidth / 2, 30, { align: "center" } as any);
+      doc.text("MEMBERSHIP APPLICATION", pageWidth / 2, 30, {
+        align: "center",
+      } as TextOptionsLight);
 
       // Branding
       doc.setFontSize(16);
       doc.setFont("helvetica", "italic");
-      doc.text("Shhh...", pageWidth - 20, 40, { align: "right" } as any);
+      doc.text("Shhh...", pageWidth - 20, 40, {
+        align: "right",
+      } as TextOptionsLight);
 
       yPos = 55;
 
@@ -372,16 +386,20 @@ const Join = () => {
       doc.setDrawColor(21, 128, 61);
       doc.setLineWidth(1);
       doc.rect(15, yPos, pageWidth - 30, 25, "FD");
-      
+
       doc.setTextColor(75, 85, 99);
       doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
-      doc.text("Membership Number", pageWidth / 2, yPos + 8, { align: "center" } as any);
-      
+      doc.text("Membership Number", pageWidth / 2, yPos + 8, {
+        align: "center",
+      } as TextOptionsLight);
+
       doc.setTextColor(21, 128, 61);
       doc.setFontSize(18);
       doc.setFont("helvetica", "bold");
-      doc.text(membershipNumber, pageWidth / 2, yPos + 18, { align: "center" } as any);
+      doc.text(membershipNumber, pageWidth / 2, yPos + 18, {
+        align: "center",
+      } as TextOptionsLight);
 
       yPos += 35;
 
@@ -390,7 +408,7 @@ const Join = () => {
       doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
       doc.text("Personal Information", 15, yPos);
-      
+
       doc.setDrawColor(21, 128, 61);
       doc.setLineWidth(0.5);
       doc.line(15, yPos + 2, pageWidth - 15, yPos + 2);
@@ -410,7 +428,10 @@ const Join = () => {
 
       addField("Full Name:", formData.fullName);
       addField("Surname:", formData.surname);
-      addField("Date of Birth:", new Date(formData.dateOfBirth).toLocaleDateString("en-ZA"));
+      addField(
+        "Date of Birth:",
+        new Date(formData.dateOfBirth).toLocaleDateString("en-ZA"),
+      );
       addField("ID Number:", formData.idNumber);
       addField("Phone Number:", formData.phoneNumber);
       addField("Email Address:", formData.email || "Not provided");
@@ -422,7 +443,7 @@ const Join = () => {
       doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
       doc.text("Address Information", 15, yPos);
-      
+
       doc.setDrawColor(21, 128, 61);
       doc.line(15, yPos + 2, pageWidth - 15, yPos + 2);
 
@@ -434,9 +455,12 @@ const Join = () => {
       doc.setFont("helvetica", "bold");
       doc.text("Residential Address:", 20, yPos);
       doc.setFont("helvetica", "normal");
-      
+
       // Handle multi-line address
-      const addressLines = doc.splitTextToSize(formData.residentialAddress, pageWidth - 100);
+      const addressLines = doc.splitTextToSize(
+        formData.residentialAddress,
+        pageWidth - 100,
+      );
       doc.text(addressLines, 80, yPos);
       yPos += addressLines.length * 7;
 
@@ -451,7 +475,7 @@ const Join = () => {
       doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
       doc.text("Confirmation", 15, yPos);
-      
+
       doc.setDrawColor(21, 128, 61);
       doc.line(15, yPos + 2, pageWidth - 15, yPos + 2);
 
@@ -462,11 +486,12 @@ const Join = () => {
       doc.setDrawColor(21, 128, 61);
       doc.setLineWidth(2);
       doc.rect(15, yPos, pageWidth - 30, 20, "FD");
-      
+
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(10);
       doc.setFont("helvetica", "italic");
-      const statement = "I understand the objectives of Shosholoza Progressive Party and I voluntarily join the party.";
+      const statement =
+        "I understand the objectives of Shosholoza Progressive Party and I voluntarily join the party.";
       const statementLines = doc.splitTextToSize(statement, pageWidth - 40);
       doc.text(statementLines, 20, yPos + 7);
 
@@ -483,7 +508,7 @@ const Join = () => {
       // Signature
       doc.setFont("helvetica", "bold");
       doc.text("Signature:", 20, yPos);
-      
+
       if (signatureCanvasRef.current) {
         const signatureData = signatureCanvasRef.current.toDataURL("image/png");
         doc.addImage(signatureData, "PNG", 80, yPos - 5, 80, 20);
@@ -495,16 +520,23 @@ const Join = () => {
       doc.setDrawColor(229, 231, 235);
       doc.setLineWidth(0.5);
       doc.line(15, yPos, pageWidth - 15, yPos);
-      
+
       yPos += 7;
       doc.setTextColor(107, 114, 128);
       doc.setFontSize(10);
       doc.setFont("helvetica", "bold");
-      doc.text("Shosholoza Progressive Party (Shosh)", pageWidth / 2, yPos, { align: "center" } as any);
-      
+      doc.text("Shosholoza Progressive Party (Shosh)", pageWidth / 2, yPos, {
+        align: "center",
+      } as TextOptionsLight);
+
       yPos += 5;
       doc.setFont("helvetica", "normal");
-      doc.text("Thank you for joining our movement for a better South Africa!", pageWidth / 2, yPos, { align: "center" } as any);
+      doc.text(
+        "Thank you for joining our movement for a better South Africa!",
+        pageWidth / 2,
+        yPos,
+        { align: "center" } as TextOptionsLight,
+      );
 
       // Save the PDF
       doc.save(`SHOSH-Membership-${membershipNumber}.pdf`);
@@ -522,7 +554,11 @@ const Join = () => {
     }
   };
 
-  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+  const startDrawing = (
+    e:
+      | React.MouseEvent<HTMLCanvasElement>
+      | React.TouchEvent<HTMLCanvasElement>,
+  ) => {
     setIsDrawing(true);
     const canvas = signatureCanvasRef.current;
     if (!canvas) return;
@@ -531,14 +567,20 @@ const Join = () => {
     if (!ctx) return;
 
     const rect = canvas.getBoundingClientRect();
-    const x = "touches" in e ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
-    const y = "touches" in e ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
+    const x =
+      "touches" in e ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
+    const y =
+      "touches" in e ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
 
     ctx.beginPath();
     ctx.moveTo(x, y);
   };
 
-  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+  const draw = (
+    e:
+      | React.MouseEvent<HTMLCanvasElement>
+      | React.TouchEvent<HTMLCanvasElement>,
+  ) => {
     if (!isDrawing) return;
 
     const canvas = signatureCanvasRef.current;
@@ -548,8 +590,10 @@ const Join = () => {
     if (!ctx) return;
 
     const rect = canvas.getBoundingClientRect();
-    const x = "touches" in e ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
-    const y = "touches" in e ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
+    const x =
+      "touches" in e ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
+    const y =
+      "touches" in e ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
 
     ctx.lineTo(x, y);
     ctx.strokeStyle = "#000";
@@ -582,23 +626,39 @@ const Join = () => {
                 <div className="animate-scale-in">
                   <CheckCircle2 className="w-20 h-20 text-green-600 mx-auto mb-6" />
                 </div>
-                <h1 className="text-3xl font-bold mb-4 animate-fade-in" style={{ animationDelay: "200ms" }}>
+                <h1
+                  className="text-3xl font-bold mb-4 animate-fade-in"
+                  style={{ animationDelay: "200ms" }}
+                >
                   Thank You!
                 </h1>
-                <p className="text-xl mb-6 animate-fade-in" style={{ animationDelay: "300ms" }}>
+                <p
+                  className="text-xl mb-6 animate-fade-in"
+                  style={{ animationDelay: "300ms" }}
+                >
                   Your membership has been successfully registered.
                 </p>
-                <div className="bg-muted p-6 rounded-lg mb-8 animate-fade-in" style={{ animationDelay: "400ms" }}>
-                  <p className="text-sm text-muted-foreground mb-2">Your Membership Number</p>
-                  <p className="text-2xl font-bold text-green-700">{membershipNumber}</p>
+                <div
+                  className="bg-muted p-6 rounded-lg mb-8 animate-fade-in"
+                  style={{ animationDelay: "400ms" }}
+                >
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Your Membership Number
+                  </p>
+                  <p className="text-2xl font-bold text-green-700">
+                    {membershipNumber}
+                  </p>
                 </div>
-                <p className="text-muted-foreground mb-8 animate-fade-in" style={{ animationDelay: "500ms" }}>
+                <p
+                  className="text-muted-foreground mb-8 animate-fade-in"
+                  style={{ animationDelay: "500ms" }}
+                >
                   A confirmation email has been sent to your email address.
                 </p>
-                <Button 
-                  onClick={handleDownloadPDF} 
-                  size="lg" 
-                  className="gap-2 animate-fade-in" 
+                <Button
+                  onClick={handleDownloadPDF}
+                  size="lg"
+                  className="gap-2 animate-fade-in"
                   style={{ animationDelay: "600ms" }}
                 >
                   <Download size={20} />
@@ -624,8 +684,12 @@ const Join = () => {
               <div className="bg-card p-8 rounded-t-lg shadow-elegant border-b-2 border-green-600 animate-fade-in">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h1 className="text-3xl font-bold mb-2">Shosholoza Progressive Party (Shosh)</h1>
-                    <h2 className="text-xl text-muted-foreground">MEMBERSHIP FORM</h2>
+                    <h1 className="text-3xl font-bold mb-2">
+                      Shosholoza Progressive Party (Shosh)
+                    </h1>
+                    <h2 className="text-xl text-muted-foreground">
+                      MEMBERSHIP FORM
+                    </h2>
                   </div>
                   <div className="text-right">
                     <p className="text-2xl italic text-gray-400">Shhh...</p>
@@ -634,23 +698,29 @@ const Join = () => {
               </div>
 
               {/* Progress Steps */}
-              <div className="bg-card px-8 py-6 border-b animate-fade-in" style={{ animationDelay: "100ms" }}>
+              <div
+                className="bg-card px-8 py-6 border-b animate-fade-in"
+                style={{ animationDelay: "100ms" }}
+              >
                 <div className="flex items-center justify-between max-w-2xl mx-auto">
                   {steps.map((step, index) => {
                     const StepIcon = step.icon;
                     const isActive = currentStep === step.number;
                     const isCompleted = currentStep > step.number;
-                    
+
                     return (
-                      <div key={step.number} className="flex items-center flex-1">
+                      <div
+                        key={step.number}
+                        className="flex items-center flex-1"
+                      >
                         <div className="flex flex-col items-center flex-1">
                           <div
                             className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${
                               isCompleted
                                 ? "bg-green-600 text-white scale-110"
                                 : isActive
-                                ? "bg-green-600 text-white scale-110 ring-4 ring-green-200"
-                                : "bg-gray-200 text-gray-400"
+                                  ? "bg-green-600 text-white scale-110 ring-4 ring-green-200"
+                                  : "bg-gray-200 text-gray-400"
                             }`}
                           >
                             {isCompleted ? (
@@ -661,7 +731,9 @@ const Join = () => {
                           </div>
                           <p
                             className={`mt-2 text-sm font-medium transition-colors duration-300 ${
-                              isActive || isCompleted ? "text-green-700" : "text-gray-400"
+                              isActive || isCompleted
+                                ? "text-green-700"
+                                : "text-gray-400"
                             }`}
                           >
                             {step.title}
@@ -684,117 +756,168 @@ const Join = () => {
 
               {/* Form */}
               <div className="bg-card p-8 rounded-b-lg shadow-elegant">
-                <form onSubmit={handleSubmit} className="space-y-8">
+                <form
+                  name="membership-application"
+                  method="POST"
+                  data-netlify="true"
+                  data-netlify-honeypot="bot-field"
+                  onSubmit={handleSubmit}
+                  className="space-y-8"
+                >
+                  <input
+                    type="hidden"
+                    name="form-name"
+                    value="membership-application"
+                  />
+                  <input type="hidden" name="bot-field" />
                   {/* Step 1: Personal Information */}
                   {currentStep === 1 && (
                     <div className="animate-slide-in">
-                      <h3 className="text-xl font-semibold mb-6 pb-2 border-b">Personal Information</h3>
-                    <div className="space-y-6">
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <div>
-                          <Label htmlFor="fullName">
-                            Full Name <span className="text-red-500">*</span>
-                          </Label>
-                          <Input
-                            id="fullName"
-                            value={formData.fullName}
-                            onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                            className="mt-2"
-                          />
-                          {errors.fullName && (
-                            <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>
-                          )}
-                        </div>
-                        <div>
-                          <Label htmlFor="surname">
-                            Surname <span className="text-red-500">*</span>
-                          </Label>
-                          <Input
-                            id="surname"
-                            value={formData.surname}
-                            onChange={(e) => setFormData({ ...formData, surname: e.target.value })}
-                            className="mt-2"
-                          />
-                          {errors.surname && (
-                            <p className="text-red-500 text-sm mt-1">{errors.surname}</p>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <div>
-                          <Label htmlFor="dateOfBirth">
-                            Date of Birth <span className="text-red-500">*</span>
-                          </Label>
-                          <Input
-                            id="dateOfBirth"
-                            type="date"
-                            value={formData.dateOfBirth}
-                            onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-                            className="mt-2"
-                          />
-                          {errors.dateOfBirth && (
-                            <p className="text-red-500 text-sm mt-1">{errors.dateOfBirth}</p>
-                          )}
-                        </div>
-                        <div>
-                          <Label htmlFor="idNumber">
-                            ID Number <span className="text-red-500">*</span>
-                          </Label>
-                          <Input
-                            id="idNumber"
-                            type="text"
-                            maxLength={13}
-                            value={formData.idNumber}
-                            onChange={(e) => {
-                              const value = e.target.value.replace(/\D/g, "");
-                              setFormData({ ...formData, idNumber: value });
-                            }}
-                            placeholder="13 digits"
-                            className="mt-2"
-                          />
-                          {errors.idNumber && (
-                            <p className="text-red-500 text-sm mt-1">{errors.idNumber}</p>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <div>
-                          <Label htmlFor="phoneNumber">
-                            Phone Number <span className="text-red-500">*</span>
-                          </Label>
-                          <Input
-                            id="phoneNumber"
-                            type="tel"
-                            value={formData.phoneNumber}
-                            onChange={(e) => {
-                              let value = e.target.value;
-                              if (!value.startsWith("+27")) {
-                                value = "+27" + value.replace(/\D/g, "");
-                              } else {
-                                value = "+27" + value.slice(3).replace(/\D/g, "");
+                      <h3 className="text-xl font-semibold mb-6 pb-2 border-b">
+                        Personal Information
+                      </h3>
+                      <div className="space-y-6">
+                        <div className="grid md:grid-cols-2 gap-6">
+                          <div>
+                            <Label htmlFor="fullName">
+                              Full Name <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                              id="fullName"
+                              value={formData.fullName}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  fullName: e.target.value,
+                                })
                               }
-                              setFormData({ ...formData, phoneNumber: value });
-                            }}
-                            placeholder="+27XXXXXXXXX"
-                            className="mt-2"
-                          />
-                          {errors.phoneNumber && (
-                            <p className="text-red-500 text-sm mt-1">{errors.phoneNumber}</p>
-                          )}
+                              className="mt-2"
+                            />
+                            {errors.fullName && (
+                              <p className="text-red-500 text-sm mt-1">
+                                {errors.fullName}
+                              </p>
+                            )}
+                          </div>
+                          <div>
+                            <Label htmlFor="surname">
+                              Surname <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                              id="surname"
+                              value={formData.surname}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  surname: e.target.value,
+                                })
+                              }
+                              className="mt-2"
+                            />
+                            {errors.surname && (
+                              <p className="text-red-500 text-sm mt-1">
+                                {errors.surname}
+                              </p>
+                            )}
+                          </div>
                         </div>
-                        <div>
-                          <Label htmlFor="email">Email Address</Label>
-                          <Input
-                            id="email"
-                            type="email"
-                            value={formData.email}
-                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                            className="mt-2"
-                          />
+
+                        <div className="grid md:grid-cols-2 gap-6">
+                          <div>
+                            <Label htmlFor="dateOfBirth">
+                              Date of Birth{" "}
+                              <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                              id="dateOfBirth"
+                              type="date"
+                              value={formData.dateOfBirth}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  dateOfBirth: e.target.value,
+                                })
+                              }
+                              className="mt-2"
+                            />
+                            {errors.dateOfBirth && (
+                              <p className="text-red-500 text-sm mt-1">
+                                {errors.dateOfBirth}
+                              </p>
+                            )}
+                          </div>
+                          <div>
+                            <Label htmlFor="idNumber">
+                              ID Number <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                              id="idNumber"
+                              type="text"
+                              maxLength={13}
+                              value={formData.idNumber}
+                              onChange={(e) => {
+                                const value = e.target.value.replace(/\D/g, "");
+                                setFormData({ ...formData, idNumber: value });
+                              }}
+                              placeholder="13 digits"
+                              className="mt-2"
+                            />
+                            {errors.idNumber && (
+                              <p className="text-red-500 text-sm mt-1">
+                                {errors.idNumber}
+                              </p>
+                            )}
+                          </div>
                         </div>
-                      </div>
+
+                        <div className="grid md:grid-cols-2 gap-6">
+                          <div>
+                            <Label htmlFor="phoneNumber">
+                              Phone Number{" "}
+                              <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                              id="phoneNumber"
+                              type="tel"
+                              value={formData.phoneNumber}
+                              onChange={(e) => {
+                                let value = e.target.value;
+                                if (!value.startsWith("+27")) {
+                                  value = "+27" + value.replace(/\D/g, "");
+                                } else {
+                                  value =
+                                    "+27" + value.slice(3).replace(/\D/g, "");
+                                }
+                                setFormData({
+                                  ...formData,
+                                  phoneNumber: value,
+                                });
+                              }}
+                              placeholder="+27XXXXXXXXX"
+                              className="mt-2"
+                            />
+                            {errors.phoneNumber && (
+                              <p className="text-red-500 text-sm mt-1">
+                                {errors.phoneNumber}
+                              </p>
+                            )}
+                          </div>
+                          <div>
+                            <Label htmlFor="email">Email Address</Label>
+                            <Input
+                              id="email"
+                              type="email"
+                              value={formData.email}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  email: e.target.value,
+                                })
+                              }
+                              className="mt-2"
+                            />
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -802,23 +925,31 @@ const Join = () => {
                   {/* Step 2: Address Information */}
                   {currentStep === 2 && (
                     <div className="animate-slide-in">
-                      <h3 className="text-xl font-semibold mb-6 pb-2 border-b">Address Information</h3>
+                      <h3 className="text-xl font-semibold mb-6 pb-2 border-b">
+                        Address Information
+                      </h3>
                       <div className="space-y-6">
                         <div>
                           <Label htmlFor="residentialAddress">
-                            Residential Address <span className="text-red-500">*</span>
+                            Residential Address{" "}
+                            <span className="text-red-500">*</span>
                           </Label>
                           <Textarea
                             id="residentialAddress"
                             value={formData.residentialAddress}
                             onChange={(e) =>
-                              setFormData({ ...formData, residentialAddress: e.target.value })
+                              setFormData({
+                                ...formData,
+                                residentialAddress: e.target.value,
+                              })
                             }
                             className="mt-2"
                             rows={3}
                           />
                           {errors.residentialAddress && (
-                            <p className="text-red-500 text-sm mt-1">{errors.residentialAddress}</p>
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.residentialAddress}
+                            </p>
                           )}
                         </div>
 
@@ -829,7 +960,9 @@ const Join = () => {
                             </Label>
                             <Select
                               value={formData.province}
-                              onValueChange={(value) => setFormData({ ...formData, province: value })}
+                              onValueChange={(value) =>
+                                setFormData({ ...formData, province: value })
+                              }
                             >
                               <SelectTrigger className="mt-2">
                                 <SelectValue placeholder="Select province" />
@@ -843,7 +976,9 @@ const Join = () => {
                               </SelectContent>
                             </Select>
                             {errors.province && (
-                              <p className="text-red-500 text-sm mt-1">{errors.province}</p>
+                              <p className="text-red-500 text-sm mt-1">
+                                {errors.province}
+                              </p>
                             )}
                           </div>
                           <div>
@@ -853,25 +988,40 @@ const Join = () => {
                             <Input
                               id="city"
                               value={formData.city}
-                              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  city: e.target.value,
+                                })
+                              }
                               className="mt-2"
                             />
                             {errors.city && (
-                              <p className="text-red-500 text-sm mt-1">{errors.city}</p>
+                              <p className="text-red-500 text-sm mt-1">
+                                {errors.city}
+                              </p>
                             )}
                           </div>
                           <div>
                             <Label htmlFor="areaSuburb">
-                              Area/Suburb <span className="text-red-500">*</span>
+                              Area/Suburb{" "}
+                              <span className="text-red-500">*</span>
                             </Label>
                             <Input
                               id="areaSuburb"
                               value={formData.areaSuburb}
-                              onChange={(e) => setFormData({ ...formData, areaSuburb: e.target.value })}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  areaSuburb: e.target.value,
+                                })
+                              }
                               className="mt-2"
                             />
                             {errors.areaSuburb && (
-                              <p className="text-red-500 text-sm mt-1">{errors.areaSuburb}</p>
+                              <p className="text-red-500 text-sm mt-1">
+                                {errors.areaSuburb}
+                              </p>
                             )}
                           </div>
                         </div>
@@ -882,57 +1032,61 @@ const Join = () => {
                   {/* Step 3: Confirmation */}
                   {currentStep === 3 && (
                     <div className="animate-slide-in">
-                      <h3 className="text-xl font-semibold mb-6 pb-2 border-b">Confirmation</h3>
-                    <div className="space-y-6">
-                      <div className="bg-muted p-6 rounded-lg">
-                        <p className="text-base leading-relaxed">
-                          I understand the objectives of Shosholoza Progressive Party and I voluntarily
-                          join the party.
-                        </p>
-                      </div>
-
-                      <div>
-                        <Label>
-                          Signature <span className="text-red-500">*</span>
-                        </Label>
-                        <div className="mt-2 border-2 border-gray-300 rounded-lg overflow-hidden">
-                          <canvas
-                            ref={signatureCanvasRef}
-                            width={600}
-                            height={200}
-                            className="w-full cursor-crosshair bg-white"
-                            onMouseDown={startDrawing}
-                            onMouseMove={draw}
-                            onMouseUp={stopDrawing}
-                            onMouseLeave={stopDrawing}
-                            onTouchStart={startDrawing}
-                            onTouchMove={draw}
-                            onTouchEnd={stopDrawing}
-                          />
+                      <h3 className="text-xl font-semibold mb-6 pb-2 border-b">
+                        Confirmation
+                      </h3>
+                      <div className="space-y-6">
+                        <div className="bg-muted p-6 rounded-lg">
+                          <p className="text-base leading-relaxed">
+                            I understand the objectives of Shosholoza
+                            Progressive Party and I voluntarily join the party.
+                          </p>
                         </div>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={clearSignature}
-                          className="mt-2"
-                        >
-                          Clear Signature
-                        </Button>
-                        {errors.signature && (
-                          <p className="text-red-500 text-sm mt-1">{errors.signature}</p>
-                        )}
-                      </div>
 
-                      <div>
-                        <Label htmlFor="date">Date</Label>
-                        <Input
-                          id="date"
-                          type="text"
-                          value={new Date().toLocaleDateString("en-ZA")}
-                          disabled
-                          className="mt-2 bg-muted"
-                        />
+                        <div>
+                          <Label>
+                            Signature <span className="text-red-500">*</span>
+                          </Label>
+                          <div className="mt-2 border-2 border-gray-300 rounded-lg overflow-hidden">
+                            <canvas
+                              ref={signatureCanvasRef}
+                              width={600}
+                              height={200}
+                              className="w-full cursor-crosshair bg-white"
+                              onMouseDown={startDrawing}
+                              onMouseMove={draw}
+                              onMouseUp={stopDrawing}
+                              onMouseLeave={stopDrawing}
+                              onTouchStart={startDrawing}
+                              onTouchMove={draw}
+                              onTouchEnd={stopDrawing}
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={clearSignature}
+                            className="mt-2"
+                          >
+                            Clear Signature
+                          </Button>
+                          {errors.signature && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.signature}
+                            </p>
+                          )}
+                        </div>
+
+                        <div>
+                          <Label htmlFor="date">Date</Label>
+                          <Input
+                            id="date"
+                            type="text"
+                            value={new Date().toLocaleDateString("en-ZA")}
+                            disabled
+                            className="mt-2 bg-muted"
+                          />
                         </div>
                       </div>
                     </div>
@@ -952,7 +1106,7 @@ const Join = () => {
                         Previous
                       </Button>
                     )}
-                    
+
                     {currentStep < totalSteps ? (
                       <Button
                         type="button"

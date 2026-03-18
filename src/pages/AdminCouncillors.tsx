@@ -1,162 +1,657 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Download } from "lucide-react";
+import { supabase, type CouncillorApplication } from "@/lib/supabase";
+import {
+  Search,
+  RefreshCw,
+  Users,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  ChevronDown,
+  ChevronUp,
+  Eye,
+  Loader2,
+  Download,
+  Phone,
+  Mail,
+  MapPin,
+  Calendar,
+  Hash,
+  FileText,
+} from "lucide-react";
 
-type CouncillorRow = {
-  id: string;
-  created_at: string;
-  name: string;
-  email: string;
-  phone: string;
-  municipality: string;
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type StatusFilter = "all" | "pending" | "approved" | "rejected";
+type SortField = "created_at" | "name" | "municipality" | "status";
+type SortDir = "asc" | "desc";
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+const STATUS_COLORS: Record<string, string> = {
+  pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  approved: "bg-green-100 text-green-800 border-green-200",
+  rejected: "bg-red-100 text-red-800 border-red-200",
 };
+
+const MUNICIPALITY_LABELS: Record<string, string> = {
+  joburg: "Joburg",
+  ekurhuleni: "Ekurhuleni",
+  tshwane: "Tshwane",
+};
+
+function StatusBadge({ status }: { status: string }) {
+  return (
+    <span
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+        STATUS_COLORS[status] ?? "bg-gray-100 text-gray-700 border-gray-200"
+      }`}
+    >
+      {status.charAt(0).toUpperCase() + status.slice(1)}
+    </span>
+  );
+}
+
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  color,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: number;
+  color: string;
+}) {
+  return (
+    <div className="bg-card rounded-lg border p-5 flex items-center gap-4">
+      <div className={`p-3 rounded-full ${color}`}>
+        <Icon size={22} className="text-white" />
+      </div>
+      <div>
+        <p className="text-sm text-muted-foreground">{label}</p>
+        <p className="text-2xl font-bold">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+// ─── Detail Modal ─────────────────────────────────────────────────────────────
+
+function CouncillorDetailModal({
+  app,
+  open,
+  onClose,
+  onStatusChange,
+}: {
+  app: CouncillorApplication | null;
+  open: boolean;
+  onClose: () => void;
+  onStatusChange: (id: string, status: string) => Promise<void>;
+}) {
+  const [updating, setUpdating] = useState(false);
+
+  if (!app) return null;
+
+  const handleStatus = async (status: string) => {
+    if (!app.id) return;
+    setUpdating(true);
+    await onStatusChange(app.id, status);
+    setUpdating(false);
+  };
+
+  const Field = ({
+    label,
+    value,
+    icon: Icon,
+  }: {
+    label: string;
+    value?: string | null;
+    icon?: React.ElementType;
+  }) => (
+    <div className="flex items-start gap-3">
+      {Icon && (
+        <div className="mt-0.5 text-muted-foreground shrink-0">
+          <Icon size={15} />
+        </div>
+      )}
+      <div className="min-w-0">
+        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+          {label}
+        </p>
+        <p className="text-sm font-medium break-words mt-0.5">
+          {value || (
+            <span className="text-muted-foreground italic">Not provided</span>
+          )}
+        </p>
+      </div>
+    </div>
+  );
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-3 text-lg">
+            <FileText size={20} className="text-yellow-600" />
+            Councillor Application
+          </DialogTitle>
+        </DialogHeader>
+
+        {/* Status bar */}
+        <div className="flex items-center justify-between bg-muted/50 rounded-lg p-3">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Status:</span>
+            <StatusBadge status={app.status ?? "pending"} />
+          </div>
+          <div className="flex gap-2">
+            {["pending", "approved", "rejected"].map((s) => (
+              <Button
+                key={s}
+                size="sm"
+                variant={app.status === s ? "default" : "outline"}
+                disabled={updating || app.status === s}
+                onClick={() => handleStatus(s)}
+                className={
+                  s === "approved"
+                    ? "hover:bg-green-600 hover:text-white"
+                    : s === "rejected"
+                      ? "hover:bg-red-600 hover:text-white"
+                      : ""
+                }
+              >
+                {updating ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  s.charAt(0).toUpperCase() + s.slice(1)
+                )}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {/* Details */}
+        <div className="space-y-4 mt-2">
+          <h3 className="font-semibold text-sm uppercase tracking-wide text-yellow-700 border-b pb-1">
+            Applicant Details
+          </h3>
+          <Field label="Full Name" value={app.name} icon={Users} />
+          <Field label="Email Address" value={app.email} icon={Mail} />
+          <Field label="Phone Number" value={app.phone} icon={Phone} />
+          <Field
+            label="Preferred Municipality"
+            value={MUNICIPALITY_LABELS[app.municipality] ?? app.municipality}
+            icon={MapPin}
+          />
+          <Field
+            label="Submitted"
+            value={
+              app.created_at
+                ? new Date(app.created_at).toLocaleString("en-ZA")
+                : undefined
+            }
+            icon={Calendar}
+          />
+          <Field label="Reference ID" value={app.id} icon={Hash} />
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
+
+const MUNICIPALITIES = [
+  "All Municipalities",
+  "Joburg",
+  "Ekurhuleni",
+  "Tshwane",
+];
 
 const AdminCouncillors = () => {
   const { toast } = useToast();
-  const [applications, setApplications] = useState<CouncillorRow[]>([]);
 
-  const sorted = useMemo(() => {
-    return [...applications].sort((a, b) => {
-      const aDate = new Date(a.created_at).getTime();
-      const bDate = new Date(b.created_at).getTime();
-      return bDate - aDate;
-    });
-  }, [applications]);
+  const [applications, setApplications] = useState<CouncillorApplication[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const load = () => {
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [municipalityFilter, setMunicipalityFilter] =
+    useState("All Municipalities");
+  const [sortField, setSortField] = useState<SortField>("created_at");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+
+  const [selectedApp, setSelectedApp] = useState<CouncillorApplication | null>(
+    null,
+  );
+  const [modalOpen, setModalOpen] = useState(false);
+
+  // ── Fetch ────────────────────────────────────────────────────────────────
+
+  const fetchApplications = useCallback(async () => {
+    setLoading(true);
+    setError(null);
     try {
-      const stored = localStorage.getItem("shosh_councillor_applications");
-      const data = stored ? JSON.parse(stored) : [];
-      setApplications(Array.isArray(data) ? data : []);
+      const { data, error: fetchError } = await supabase
+        .from("councillor_applications")
+        .select("*")
+        .order(sortField, { ascending: sortDir === "asc" });
+
+      if (fetchError) throw new Error(fetchError.message);
+      setApplications((data as CouncillorApplication[]) ?? []);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to load data.";
+      setError(msg);
       toast({
-        title: "Loaded",
-        description: `${Array.isArray(data) ? data.length : 0} applications loaded from localStorage. (${window.location.origin})`,
-      });
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      toast({
-        title: "Error",
+        title: "Error loading applications",
         description: msg,
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [sortField, sortDir, toast]);
 
   useEffect(() => {
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    fetchApplications();
+  }, [fetchApplications]);
 
-  const exportToCSV = () => {
-    if (applications.length === 0) {
+  // ── Status update ────────────────────────────────────────────────────────
+
+  const handleStatusChange = async (id: string, status: string) => {
+    const { error: updateError } = await supabase
+      .from("councillor_applications")
+      .update({ status })
+      .eq("id", id);
+
+    if (updateError) {
       toast({
-        title: "No data",
-        description: "No applications to export.",
+        title: "Update failed",
+        description: updateError.message,
+        variant: "destructive",
       });
       return;
     }
 
-    const headers = ["ID", "Created At", "Name", "Email", "Phone", "Municipality"];
-    const rows = applications.map((a) => [
-      a.id,
-      a.created_at,
-      a.name,
-      a.email,
-      a.phone,
-      a.municipality,
-    ]);
-
-    const csvContent = [
-      headers.join(","),
-      ...rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")),
-    ].join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `shosh-councillor-applications-${new Date().toISOString().split("T")[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    setApplications((prev) =>
+      prev.map((a) =>
+        a.id === id
+          ? { ...a, status: status as CouncillorApplication["status"] }
+          : a,
+      ),
+    );
+    if (selectedApp?.id === id) {
+      setSelectedApp((prev) =>
+        prev
+          ? { ...prev, status: status as CouncillorApplication["status"] }
+          : prev,
+      );
+    }
 
     toast({
-      title: "Exported",
-      description: "Applications exported to CSV.",
+      title: "Status updated",
+      description: `Application marked as ${status}.`,
     });
   };
 
-  const clearAll = () => {
-    if (confirm("Are you sure you want to clear all applications from localStorage?")) {
-      localStorage.removeItem("shosh_councillor_applications");
-      setApplications([]);
-      toast({
-        title: "Cleared",
-        description: "All applications cleared from localStorage.",
-      });
+  // ── Filtering ────────────────────────────────────────────────────────────
+
+  const filtered = applications.filter((app) => {
+    const q = search.toLowerCase();
+    const matchesSearch =
+      !q ||
+      app.name.toLowerCase().includes(q) ||
+      app.email.toLowerCase().includes(q) ||
+      app.phone.includes(q) ||
+      app.municipality.toLowerCase().includes(q);
+
+    const matchesStatus = statusFilter === "all" || app.status === statusFilter;
+
+    const matchesMunicipality =
+      municipalityFilter === "All Municipalities" ||
+      (MUNICIPALITY_LABELS[app.municipality] ?? app.municipality) ===
+        municipalityFilter;
+
+    return matchesSearch && matchesStatus && matchesMunicipality;
+  });
+
+  // ── Stats ────────────────────────────────────────────────────────────────
+
+  const stats = {
+    total: applications.length,
+    pending: applications.filter((a) => a.status === "pending").length,
+    approved: applications.filter((a) => a.status === "approved").length,
+    rejected: applications.filter((a) => a.status === "rejected").length,
+  };
+
+  // ── Sort ─────────────────────────────────────────────────────────────────
+
+  const toggleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      setSortDir("asc");
     }
   };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field)
+      return <ChevronDown size={14} className="opacity-30" />;
+    return sortDir === "asc" ? (
+      <ChevronUp size={14} />
+    ) : (
+      <ChevronDown size={14} />
+    );
+  };
+
+  // ── CSV Export ────────────────────────────────────────────────────────────
+
+  const exportCSV = () => {
+    const headers = [
+      "ID",
+      "Full Name",
+      "Email",
+      "Phone",
+      "Municipality",
+      "Status",
+      "Submitted At",
+    ];
+
+    const rows = filtered.map((a) => [
+      a.id ?? "",
+      a.name,
+      a.email,
+      a.phone,
+      MUNICIPALITY_LABELS[a.municipality] ?? a.municipality,
+      a.status ?? "",
+      a.created_at ? new Date(a.created_at).toLocaleString("en-ZA") : "",
+    ]);
+
+    const csv = [headers, ...rows]
+      .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `shosh-councillors-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
     <div className="min-h-screen flex flex-col">
       <Navigation />
-      <main className="flex-1">
-        <div className="max-w-6xl mx-auto px-4 py-10">
-          <h1 className="text-3xl font-bold mb-2">Councillor Applications</h1>
-          <p className="text-muted-foreground mb-6">Admin dashboard (localStorage)</p>
 
-          <div className="flex flex-col sm:flex-row gap-3 sm:items-center mb-6">
-            <Button onClick={load} variant="default">
-              Load from localStorage
-            </Button>
-            <Button onClick={exportToCSV} variant="outline" disabled={applications.length === 0}>
-              <Download className="w-4 h-4 mr-2" />
-              Export CSV
-            </Button>
-            <Button onClick={clearAll} variant="destructive" disabled={applications.length === 0}>
-              Clear All
-            </Button>
+      <main className="flex-1 pt-16">
+        <div className="max-w-7xl mx-auto px-4 py-10 space-y-8">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold">Councillor Applications</h1>
+              <p className="text-muted-foreground mt-1">
+                Manage and review all councillor applications
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchApplications}
+                disabled={loading}
+                className="gap-2"
+              >
+                <RefreshCw
+                  size={15}
+                  className={loading ? "animate-spin" : ""}
+                />
+                Refresh
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={exportCSV}
+                disabled={filtered.length === 0}
+                className="gap-2"
+              >
+                <Download size={15} />
+                Export CSV
+              </Button>
+            </div>
           </div>
 
-          <div className="rounded-lg border bg-card">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Submitted</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Municipality</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sorted.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground">
-                      No applications loaded. Click "Load from localStorage" to view.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  sorted.map((a) => (
-                    <TableRow key={a.id}>
-                      <TableCell>{new Date(a.created_at).toLocaleString("en-ZA")}</TableCell>
-                      <TableCell className="font-medium">{a.name}</TableCell>
-                      <TableCell>{a.email}</TableCell>
-                      <TableCell>{a.phone}</TableCell>
-                      <TableCell>{a.municipality}</TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+          {/* Stats */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard
+              icon={Users}
+              label="Total Applications"
+              value={stats.total}
+              color="bg-blue-500"
+            />
+            <StatCard
+              icon={Clock}
+              label="Pending Review"
+              value={stats.pending}
+              color="bg-yellow-500"
+            />
+            <StatCard
+              icon={CheckCircle2}
+              label="Approved"
+              value={stats.approved}
+              color="bg-green-600"
+            />
+            <StatCard
+              icon={XCircle}
+              label="Rejected"
+              value={stats.rejected}
+              color="bg-red-500"
+            />
+          </div>
+
+          {/* Filters */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search
+                size={16}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              />
+              <Input
+                placeholder="Search by name, email, phone, municipality…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+
+            <Select
+              value={statusFilter}
+              onValueChange={(v) => setStatusFilter(v as StatusFilter)}
+            >
+              <SelectTrigger className="w-full sm:w-44">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="approved">Approved</SelectItem>
+                <SelectItem value="rejected">Rejected</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={municipalityFilter}
+              onValueChange={setMunicipalityFilter}
+            >
+              <SelectTrigger className="w-full sm:w-52">
+                <SelectValue placeholder="Municipality" />
+              </SelectTrigger>
+              <SelectContent>
+                {MUNICIPALITIES.map((m) => (
+                  <SelectItem key={m} value={m}>
+                    {m}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Table */}
+          <div className="rounded-lg border bg-card overflow-hidden">
+            {loading ? (
+              <div className="flex items-center justify-center py-24 text-muted-foreground gap-3">
+                <Loader2 size={24} className="animate-spin" />
+                <span>Loading applications…</span>
+              </div>
+            ) : error ? (
+              <div className="flex flex-col items-center justify-center py-24 gap-4">
+                <XCircle size={40} className="text-red-400" />
+                <p className="text-muted-foreground text-center max-w-sm">
+                  {error}
+                </p>
+                <Button variant="outline" onClick={fetchApplications}>
+                  Try Again
+                </Button>
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-24 gap-3 text-muted-foreground">
+                <Users size={40} className="opacity-30" />
+                <p>
+                  {applications.length === 0
+                    ? "No councillor applications yet."
+                    : "No applications match your filters."}
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/60 border-b">
+                    <tr>
+                      {(
+                        [
+                          { label: "Submitted", field: "created_at" },
+                          { label: "Full Name", field: "name" },
+                          { label: "Email", field: null },
+                          { label: "Phone", field: null },
+                          { label: "Municipality", field: "municipality" },
+                          { label: "Status", field: "status" },
+                          { label: "", field: null },
+                        ] as { label: string; field: SortField | null }[]
+                      ).map(({ label, field }) => (
+                        <th
+                          key={label}
+                          className={`px-4 py-3 text-left font-semibold text-muted-foreground whitespace-nowrap ${
+                            field
+                              ? "cursor-pointer select-none hover:text-foreground"
+                              : ""
+                          }`}
+                          onClick={() => field && toggleSort(field)}
+                        >
+                          <span className="inline-flex items-center gap-1">
+                            {label}
+                            {field && <SortIcon field={field} />}
+                          </span>
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map((app, i) => (
+                      <tr
+                        key={app.id}
+                        className={`border-b last:border-0 transition-colors hover:bg-muted/30 ${
+                          i % 2 === 0 ? "" : "bg-muted/10"
+                        }`}
+                      >
+                        <td className="px-4 py-3 whitespace-nowrap text-muted-foreground text-xs">
+                          {app.created_at
+                            ? new Date(app.created_at).toLocaleDateString(
+                                "en-ZA",
+                              )
+                            : "—"}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap font-medium">
+                          {app.name}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
+                          {app.email}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
+                          {app.phone}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap capitalize">
+                          {MUNICIPALITY_LABELS[app.municipality] ??
+                            app.municipality}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <StatusBadge status={app.status ?? "pending"} />
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="gap-1.5 h-8"
+                            onClick={() => {
+                              setSelectedApp(app);
+                              setModalOpen(true);
+                            }}
+                          >
+                            <Eye size={14} />
+                            View
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Footer row */}
+            {!loading && !error && filtered.length > 0 && (
+              <div className="px-4 py-3 border-t bg-muted/30 text-xs text-muted-foreground">
+                Showing {filtered.length} of {applications.length} application
+                {applications.length !== 1 ? "s" : ""}
+              </div>
+            )}
           </div>
         </div>
       </main>
+
       <Footer />
+
+      {/* Detail modal */}
+      <CouncillorDetailModal
+        app={selectedApp}
+        open={modalOpen}
+        onClose={() => {
+          setModalOpen(false);
+          setSelectedApp(null);
+        }}
+        onStatusChange={handleStatusChange}
+      />
     </div>
   );
 };
