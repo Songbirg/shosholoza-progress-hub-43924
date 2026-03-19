@@ -1,21 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL as string) ?? "";
+// Supabase anon key is intentionally public — data is protected by Row Level Security (RLS) policies
+const supabaseUrl = "https://jpafcmixtchvtrkhltst.supabase.co";
 const supabaseAnonKey =
-  (import.meta.env.VITE_SUPABASE_ANON_KEY as string) ?? "";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpwYWZjbWl4dGNodnRya2hsdHN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1MzIzODYsImV4cCI6MjA2OTEwODM4Nn0.dR0-DW8_ekftD9DZjGutGuyh4kiPG338NQ367tC8Pcw";
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn(
-    "[Supabase] Missing environment variables.\n" +
-      "Make sure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set " +
-      "in your Netlify environment variables (Site settings → Environment variables).",
-  );
-}
-
-export const supabase = createClient(
-  supabaseUrl || "https://placeholder.supabase.co",
-  supabaseAnonKey || "placeholder-key",
-);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // ─── Typed helpers ────────────────────────────────────────────────────────────
 
