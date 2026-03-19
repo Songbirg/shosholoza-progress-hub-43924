@@ -13,7 +13,6 @@ const Navigation = () => {
     { name: "About", path: "/about" },
     { name: "Our Founder", path: "/founder" },
     { name: "Values", path: "/values" },
-    { name: "Councillor", path: "/councillor" },
     { name: "Contact", path: "/contact" },
   ];
 
@@ -24,7 +23,11 @@ const Navigation = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link to="/home" className="flex items-center">
-            <img src={shoshLogo} alt="Shosholoza Progressive Party" className="h-10 w-auto" />
+            <img
+              src={shoshLogo}
+              alt="Shosholoza Progressive Party"
+              className="h-10 w-auto"
+            />
           </Link>
 
           {/* Desktop Navigation */}
@@ -40,7 +43,9 @@ const Navigation = () => {
                 }`}
               >
                 {item.name}
-                <span className={`absolute bottom-0 left-0 w-full h-0.5 bg-foreground transform origin-left transition-transform duration-300 ${isActive(item.path) ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`}></span>
+                <span
+                  className={`absolute bottom-0 left-0 w-full h-0.5 bg-foreground transform origin-left transition-transform duration-300 ${isActive(item.path) ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"}`}
+                ></span>
               </Link>
             ))}
             <Link to="/membership" className="hover-scale inline-block">

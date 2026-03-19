@@ -82,7 +82,70 @@ create policy "auth_all_membership"
 
 
 -- ────────────────────────────────────────────────────────────
---  2. CONTACT MESSAGES
+--  2. COUNCILLOR APPLICATIONS
+-- ────────────────────────────────────────────────────────────
+
+create table if not exists public.councillor_applications (
+  id           uuid primary key default gen_random_uuid(),
+  created_at   timestamptz not null default now(),
+  name         text not null,
+  email        text not null,
+  phone        text not null,
+  municipality text not null,
+  motivation   text,
+  user_agent   text,
+  status       text not null default 'pending'
+                 check (status in ('pending', 'approved', 'rejected'))
+);
+
+-- Indexes
+create index if not exists idx_councillor_applications_created_at
+  on public.councillor_applications (created_at desc);
+
+create index if not exists idx_councillor_applications_status
+  on public.councillor_applications (status);
+
+create index if not exists idx_councillor_applications_municipality
+  on public.councillor_applications (municipality);
+
+-- Row Level Security
+alter table public.councillor_applications enable row level security;
+
+create policy "anon_insert_councillor"
+  on public.councillor_applications
+  for insert
+  to anon
+  with check (true);
+
+create policy "anon_select_councillor"
+  on public.councillor_applications
+  for select
+  to anon
+  using (true);
+
+create policy "anon_update_councillor"
+  on public.councillor_applications
+  for update
+  to anon
+  using (true)
+  with check (true);
+
+create policy "anon_delete_councillor"
+  on public.councillor_applications
+  for delete
+  to anon
+  using (true);
+
+create policy "auth_all_councillor"
+  on public.councillor_applications
+  for all
+  to authenticated
+  using (true)
+  with check (true);
+
+
+-- ────────────────────────────────────────────────────────────
+--  3. CONTACT MESSAGES
 -- ────────────────────────────────────────────────────────────
 
 create table if not exists public.contact_messages (
@@ -141,7 +204,7 @@ create policy "auth_all_contact"
 
 
 -- ────────────────────────────────────────────────────────────
---  3. INVESTOR INQUIRIES
+--  4. INVESTOR INQUIRIES
 -- ────────────────────────────────────────────────────────────
 
 create table if not exists public.investor_inquiries (
@@ -174,22 +237,34 @@ create policy "auth_all_investor"     on public.investor_inquiries for all to au
 
 
 -- ────────────────────────────────────────────────────────────
---  4. PATCH: Run this block if you already ran the schema above
---     and need to add the missing UPDATE / DELETE policies only
+--  5. PATCH: Run this block if you already ran the schema above
+--     and need to fix missing columns / policies on existing tables
 -- ────────────────────────────────────────────────────────────
 
--- Uncomment and run these if the policies above already exist:
+-- Add missing motivation column to an existing councillor_applications table:
+-- alter table public.councillor_applications add column if not exists motivation text;
+
+-- Create councillor_applications from scratch if it doesn't exist yet:
+-- (copy the full table + policy block from section 2 above and run it separately)
+
+-- Fix missing RLS policies on an existing investor_inquiries table
+-- (run these if investor data inserts fine but doesn't appear in the admin):
+-- alter table public.investor_inquiries enable row level security;
+-- create policy "anon_insert_investor"  on public.investor_inquiries for insert to anon with check (true);
+-- create policy "anon_select_investor"  on public.investor_inquiries for select to anon using (true);
+-- create policy "anon_update_investor"  on public.investor_inquiries for update to anon using (true) with check (true);
+-- create policy "anon_delete_investor"  on public.investor_inquiries for delete to anon using (true);
+-- create policy "auth_all_investor"     on public.investor_inquiries for all to authenticated using (true) with check (true);
+
+-- Fix missing RLS policies on existing membership / contact tables if needed:
 -- create policy "anon_update_membership" on public.membership_applications for update to anon using (true) with check (true);
 -- create policy "anon_delete_membership" on public.membership_applications for delete to anon using (true);
 -- create policy "anon_update_contact"    on public.contact_messages        for update to anon using (true) with check (true);
 -- create policy "anon_delete_contact"    on public.contact_messages        for delete to anon using (true);
 
--- To create the investor_inquiries table if you already ran the schema:
--- (copy the full table + policy block from section 3 above and run it separately)
-
 
 -- ────────────────────────────────────────────────────────────
---  5. HELPER: updated_at trigger (optional, future-proof)
+--  6. HELPER: updated_at trigger (optional, future-proof)
 -- ────────────────────────────────────────────────────────────
 
 create or replace function public.set_updated_at()

@@ -691,13 +691,13 @@ const Join = () => {
     setCouncillorLoading(true);
     try {
       const { error } = await supabase.from("councillor_applications").insert({
-        full_name: councillorData.fullName,
+        name: councillorData.fullName,
         email: councillorData.email,
         phone: councillorData.phone,
         municipality: councillorData.municipality,
         motivation: councillorData.motivation || null,
         user_agent: navigator.userAgent,
-        status: "new",
+        status: "pending",
       });
       if (error) throw new Error(error.message);
       setCouncillorSubmitted(true);
