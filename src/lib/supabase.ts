@@ -44,6 +44,21 @@ export interface CouncillorApplication {
   email: string;
   phone: string;
   municipality: string;
+  motivation?: string;
   status?: "pending" | "approved" | "rejected";
+  user_agent?: string;
+}
+
+export interface InvestorInquiry {
+  id?: string;
+  created_at?: string;
+  full_name: string;
+  email: string;
+  phone: string;
+  company?: string;
+  investment_range: string;
+  area_of_interest: string;
+  message: string;
+  status?: "new" | "contacted" | "declined";
   user_agent?: string;
 }

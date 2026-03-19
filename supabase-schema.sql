@@ -141,7 +141,40 @@ create policy "auth_all_contact"
 
 
 -- ────────────────────────────────────────────────────────────
---  3. PATCH: Run this block if you already ran the schema above
+--  3. INVESTOR INQUIRIES
+-- ────────────────────────────────────────────────────────────
+
+create table if not exists public.investor_inquiries (
+  id               uuid primary key default gen_random_uuid(),
+  created_at       timestamptz not null default now(),
+  full_name        text not null,
+  email            text not null,
+  phone            text not null,
+  company          text,
+  investment_range text not null,
+  area_of_interest text not null,
+  message          text not null,
+  status           text not null default 'new'
+                     check (status in ('new', 'contacted', 'declined')),
+  user_agent       text
+);
+
+-- Indexes
+create index if not exists idx_investor_inquiries_created_at
+  on public.investor_inquiries (created_at desc);
+
+-- Row Level Security
+alter table public.investor_inquiries enable row level security;
+
+create policy "anon_insert_investor"  on public.investor_inquiries for insert to anon with check (true);
+create policy "anon_select_investor"  on public.investor_inquiries for select to anon using (true);
+create policy "anon_update_investor"  on public.investor_inquiries for update to anon using (true) with check (true);
+create policy "anon_delete_investor"  on public.investor_inquiries for delete to anon using (true);
+create policy "auth_all_investor"     on public.investor_inquiries for all to authenticated using (true) with check (true);
+
+
+-- ────────────────────────────────────────────────────────────
+--  4. PATCH: Run this block if you already ran the schema above
 --     and need to add the missing UPDATE / DELETE policies only
 -- ────────────────────────────────────────────────────────────
 
@@ -151,12 +184,12 @@ create policy "auth_all_contact"
 -- create policy "anon_update_contact"    on public.contact_messages        for update to anon using (true) with check (true);
 -- create policy "anon_delete_contact"    on public.contact_messages        for delete to anon using (true);
 
--- To delete the test row inserted during verification:
--- delete from public.membership_applications where membership_number = 'SHOSH-TEST-001';
+-- To create the investor_inquiries table if you already ran the schema:
+-- (copy the full table + policy block from section 3 above and run it separately)
 
 
 -- ────────────────────────────────────────────────────────────
---  4. HELPER: updated_at trigger (optional, future-proof)
+--  5. HELPER: updated_at trigger (optional, future-proof)
 -- ────────────────────────────────────────────────────────────
 
 create or replace function public.set_updated_at()
