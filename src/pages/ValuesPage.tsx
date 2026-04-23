@@ -1,6 +1,7 @@
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Heart, Scale, Shield, TrendingUp, Users, Book, Briefcase, Home } from "lucide-react";
+import ScrollInOut from "@/components/ScrollInOut";
 
 const coreValues = [
   {
@@ -55,14 +56,14 @@ const ValuesPage = () => {
       <main className="pt-16">
         <section className="py-20 bg-muted/30">
           <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto text-center mb-16">
+            <ScrollInOut className="max-w-4xl mx-auto text-center mb-16">
               <h1 className="mb-6 animate-fade-in">Our Values & Principles</h1>
               <p className="text-xl text-muted-foreground animate-fade-in" style={{ animationDelay: '100ms' }}>
                 The foundation of everything we do is built on these core beliefs and commitments to the people of South Africa.
               </p>
-            </div>
+            </ScrollInOut>
 
-            <div className="max-w-6xl mx-auto mb-20">
+            <ScrollInOut className="max-w-6xl mx-auto mb-20" inDelayMs={80}>
               <h2 className="text-3xl font-bold text-center mb-12">Core Values</h2>
               <div className="grid md:grid-cols-2 gap-8">
                 {coreValues.map((value, index) => {
@@ -86,9 +87,9 @@ const ValuesPage = () => {
                   );
                 })}
               </div>
-            </div>
+            </ScrollInOut>
 
-            <div className="max-w-6xl mx-auto">
+            <ScrollInOut className="max-w-6xl mx-auto" inDelayMs={120}>
               <h2 className="text-3xl font-bold text-center mb-12">Policy Priorities</h2>
               <div className="grid md:grid-cols-2 gap-8">
                 {policyPriorities.map((priority, index) => {
@@ -112,7 +113,7 @@ const ValuesPage = () => {
                   );
                 })}
               </div>
-            </div>
+            </ScrollInOut>
           </div>
         </section>
       </main>

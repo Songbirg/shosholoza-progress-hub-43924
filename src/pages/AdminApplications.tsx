@@ -60,7 +60,7 @@ const TAB_CONFIG: {
 }[] = [
   { id: "candidates",  label: "Candidates",  icon: Users,      activeColor: "text-green-600",  borderColor: "border-green-600"  },
   { id: "councillors", label: "Councillors", icon: Building2,  activeColor: "text-yellow-600", borderColor: "border-yellow-500" },
-  { id: "investors",   label: "Investors",   icon: TrendingUp, activeColor: "text-blue-600",   borderColor: "border-blue-600"   },
+  { id: "investors",   label: "Sponsors",    icon: TrendingUp, activeColor: "text-blue-600",   borderColor: "border-blue-600"   },
 ];
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
@@ -313,7 +313,7 @@ function CouncillorModal({
   );
 }
 
-// ─── Investor Modal ───────────────────────────────────────────────────────────
+// ─── Sponsor Modal ────────────────────────────────────────────────────────────
 function InvestorModal({
   app, open, onClose, onStatusChange,
 }: {
@@ -337,7 +337,7 @@ function InvestorModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-lg">
             <TrendingUp size={20} className="text-blue-600" />
-            Investor Inquiry
+            Sponsor Inquiry
           </DialogTitle>
         </DialogHeader>
 
@@ -356,7 +356,7 @@ function InvestorModal({
 
         <div className="space-y-4 mt-2">
           <h3 className="font-semibold text-xs uppercase tracking-wide text-blue-700 border-b pb-1">
-            Investor Details
+            Sponsor Details
           </h3>
           <Field label="Full Name" value={app.full_name} icon={Users} />
           <Field label="Email" value={app.email} icon={Mail} />

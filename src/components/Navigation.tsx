@@ -48,7 +48,7 @@ const Navigation = () => {
                 ></span>
               </Link>
             ))}
-            <Link to="/membership" className="hover-scale inline-block">
+            <Link to="/candidate" className="hover-scale inline-block">
               <Button variant="hero" size="sm">
                 Join Shosh
               </Button>
@@ -82,7 +82,7 @@ const Navigation = () => {
                 {item.name}
               </Link>
             ))}
-            <Link to="/membership" onClick={() => setIsOpen(false)}>
+            <Link to="/candidate" onClick={() => setIsOpen(false)}>
               <Button variant="hero" size="sm" className="w-full mt-4">
                 Join Shosh
               </Button>

@@ -25,8 +25,12 @@ const values = [
 
 const Values = () => {
   return (
-    <section className="py-20">
-      <div className="container mx-auto px-4">
+    <section className="py-20 relative overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+        <div className="bubble-morph blob-1" />
+        <div className="bubble-morph blob-2" />
+      </div>
+      <div className="container mx-auto px-4 relative">
         <div className="text-center mb-16">
           <h2 className="mb-4">Our Core Values</h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">

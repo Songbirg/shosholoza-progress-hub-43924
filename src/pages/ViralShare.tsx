@@ -339,7 +339,7 @@ const ViralShare = () => {
                     </p>
                   </div>
                   
-                  <Link to="/membership">
+                  <Link to="/candidate">
                     <Button
                       size="lg"
                       className="w-full bg-green-600 hover:bg-green-700 text-white text-lg py-6 gap-3"

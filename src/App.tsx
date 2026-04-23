@@ -3,6 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import AnimatedBackground from "@/components/AnimatedBackground";
+import WhatsAppFloatingButton from "@/components/WhatsAppFloatingButton";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import Founder from "./pages/Founder";
@@ -22,23 +24,27 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/home" element={<Index />} />
-          <Route path="/share" element={<ViralShare />} />
-          <Route path="/admin/applications" element={<AdminApplications />} />
-          <Route path="/admin/councillors" element={<AdminCouncillors />} />
-          <Route path="/councillor" element={<Councillor />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/founder" element={<Founder />} />
-          <Route path="/values" element={<ValuesPage />} />
-          <Route path="/membership" element={<Join />} />
-          <Route path="/contact" element={<Contact />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <AnimatedBackground />
+      <WhatsAppFloatingButton />
+      <div className="relative z-10">
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/home" element={<Index />} />
+            <Route path="/share" element={<ViralShare />} />
+            <Route path="/admin/applications" element={<AdminApplications />} />
+            <Route path="/admin/councillors" element={<AdminCouncillors />} />
+            <Route path="/councillor" element={<Councillor />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/founder" element={<Founder />} />
+            <Route path="/values" element={<ValuesPage />} />
+            <Route path="/candidate" element={<Join />} />
+            <Route path="/contact" element={<Contact />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </div>
     </TooltipProvider>
   </QueryClientProvider>
 );

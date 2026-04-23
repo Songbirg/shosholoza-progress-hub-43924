@@ -23,8 +23,6 @@ import {
   FileCheck,
   Users,
   Building2,
-  TrendingUp,
-  ArrowLeft,
   Loader2,
 } from "lucide-react";
 import jsPDF, { type TextOptionsLight } from "jspdf";
@@ -37,6 +35,9 @@ const Join = () => {
 
   // ── Role selection ──────────────────────────────────────────────────────────
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+
+  // ── Councillor candidate flag (for unified form) ────────────────────────────
+  const [isCouncillorCandidate, setIsCouncillorCandidate] = useState(false);
 
   // ── Candidate form state ────────────────────────────────────────────────────
   const [currentStep, setCurrentStep] = useState(1);
@@ -54,6 +55,8 @@ const Join = () => {
     city: "",
     areaSuburb: "",
     signature: "",
+    municipality: "",
+    motivation: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const signatureCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -62,7 +65,7 @@ const Join = () => {
   const totalSteps = 3;
   const steps = [
     { number: 1, title: "Personal Details", icon: User },
-    { number: 2, title: "Address Information", icon: MapPin },
+    { number: 2, title: "Address & Council", icon: MapPin },
     { number: 3, title: "Confirmation", icon: FileCheck },
   ];
 
@@ -77,36 +80,6 @@ const Join = () => {
     "Northern Cape",
     "Free State",
   ];
-
-  // ── Councillor form state ───────────────────────────────────────────────────
-  const [councillorData, setCouncillorData] = useState({
-    fullName: "",
-    email: "",
-    phone: "",
-    municipality: "",
-    motivation: "",
-  });
-  const [councillorErrors, setCouncillorErrors] = useState<
-    Record<string, string>
-  >({});
-  const [councillorSubmitted, setCouncillorSubmitted] = useState(false);
-  const [councillorLoading, setCouncillorLoading] = useState(false);
-
-  // ── Investor form state ─────────────────────────────────────────────────────
-  const [investorData, setInvestorData] = useState({
-    fullName: "",
-    email: "",
-    phone: "",
-    company: "",
-    investmentRange: "",
-    areaOfInterest: "",
-    message: "",
-  });
-  const [investorErrors, setInvestorErrors] = useState<Record<string, string>>(
-    {},
-  );
-  const [investorSubmitted, setInvestorSubmitted] = useState(false);
-  const [investorLoading, setInvestorLoading] = useState(false);
 
   // ── Candidate helpers ───────────────────────────────────────────────────────
   const validateIdNumber = (id: string): boolean => {
@@ -143,6 +116,11 @@ const Join = () => {
       if (!formData.city.trim()) newErrors.city = "City is required";
       if (!formData.areaSuburb.trim())
         newErrors.areaSuburb = "Area/Suburb is required";
+
+      // Councillor-specific validation
+      if (isCouncillorCandidate && !formData.municipality) {
+        newErrors.municipality = "Preferred municipality is required for councillor candidates";
+      }
     }
 
     if (step === 3) {
@@ -352,6 +330,27 @@ const Join = () => {
 
       if (dbError) {
         throw new Error(`Database error: ${dbError.message}`);
+      }
+
+      // ── Save to Councillor Applications if applicable ────────────────────────
+      if (isCouncillorCandidate) {
+        const { error: councillorError } = await supabase
+          .from("councillor_applications")
+          .insert({
+            name: formData.fullName,
+            email: formData.email,
+            phone: formData.phoneNumber,
+            municipality: formData.municipality,
+            motivation: formData.motivation || null,
+            user_agent: navigator.userAgent,
+            status: "pending",
+            membership_number: newMembershipNumber,
+          });
+
+        if (councillorError) {
+          console.error("Councillor application error:", councillorError);
+          // Don't block submission if councillor insert fails
+        }
       }
 
       // ── Send email notification (optional – best effort) ──────────────────────
@@ -661,121 +660,6 @@ const Join = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   };
 
-  // ── Councillor helpers ──────────────────────────────────────────────────────
-  const validateCouncillorForm = (): boolean => {
-    const errs: Record<string, string> = {};
-    if (!councillorData.fullName.trim())
-      errs.fullName = "Full name is required";
-    if (!councillorData.email.trim()) errs.email = "Email is required";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(councillorData.email))
-      errs.email = "Please enter a valid email address";
-    if (!councillorData.phone.trim()) errs.phone = "Phone number is required";
-    if (!councillorData.municipality)
-      errs.municipality = "Please select a municipality";
-    setCouncillorErrors(errs);
-    return Object.keys(errs).length === 0;
-  };
-
-  const handleCouncillorSubmit = async (
-    e: React.FormEvent<HTMLFormElement>,
-  ) => {
-    e.preventDefault();
-    if (!validateCouncillorForm()) {
-      toast({
-        title: "Please complete all required fields",
-        description: "Check the form for any errors.",
-        variant: "destructive",
-      });
-      return;
-    }
-    setCouncillorLoading(true);
-    try {
-      const { error } = await supabase.from("councillor_applications").insert({
-        name: councillorData.fullName,
-        email: councillorData.email,
-        phone: councillorData.phone,
-        municipality: councillorData.municipality,
-        motivation: councillorData.motivation || null,
-        user_agent: navigator.userAgent,
-        status: "pending",
-      });
-      if (error) throw new Error(error.message);
-      setCouncillorSubmitted(true);
-      toast({
-        title: "Application Submitted!",
-        description: "We'll be in touch with you very soon.",
-      });
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      toast({
-        title: "Submission Failed",
-        description: msg,
-        variant: "destructive",
-      });
-    } finally {
-      setCouncillorLoading(false);
-    }
-  };
-
-  // ── Investor helpers ────────────────────────────────────────────────────────
-  const validateInvestorForm = (): boolean => {
-    const errs: Record<string, string> = {};
-    if (!investorData.fullName.trim()) errs.fullName = "Full name is required";
-    if (!investorData.email.trim()) errs.email = "Email is required";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(investorData.email))
-      errs.email = "Please enter a valid email address";
-    if (!investorData.phone.trim()) errs.phone = "Phone number is required";
-    if (!investorData.investmentRange)
-      errs.investmentRange = "Please select an investment range";
-    if (!investorData.areaOfInterest)
-      errs.areaOfInterest = "Please select an area of interest";
-    if (!investorData.message.trim())
-      errs.message = "Please tell us how we can work together";
-    setInvestorErrors(errs);
-    return Object.keys(errs).length === 0;
-  };
-
-  const handleInvestorSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!validateInvestorForm()) {
-      toast({
-        title: "Please complete all required fields",
-        description: "Check the form for any errors.",
-        variant: "destructive",
-      });
-      return;
-    }
-    setInvestorLoading(true);
-    try {
-      const { error } = await supabase.from("investor_inquiries").insert({
-        full_name: investorData.fullName,
-        email: investorData.email,
-        phone: investorData.phone,
-        company: investorData.company || null,
-        investment_range: investorData.investmentRange,
-        area_of_interest: investorData.areaOfInterest,
-        message: investorData.message,
-        user_agent: navigator.userAgent,
-        status: "new",
-      });
-      if (error) throw new Error(error.message);
-      setInvestorSubmitted(true);
-      toast({
-        title: "Inquiry Submitted!",
-        description: "Our team will reach out to you shortly.",
-      });
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      toast({
-        title: "Submission Failed",
-        description: msg,
-        variant: "destructive",
-      });
-    } finally {
-      setInvestorLoading(false);
-    }
-  };
-
   // ══════════════════════════════════════════════════════════════════════════════
   // RENDER: Role Selection
   // ══════════════════════════════════════════════════════════════════════════════
@@ -793,49 +677,69 @@ const Join = () => {
                     Join Shosholoza Progressive Party
                   </h1>
                   <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                    Choose how you want to be part of South Africa's future.
-                    Every role matters — from grassroots membership to civic
-                    leadership and investment.
+                    Choose your path — become a registered Party Member or step up as a
+                    Ward Councillor candidate and lead your community forward.
                   </p>
                 </div>
 
                 {/* Role Cards */}
-                <div className="grid md:grid-cols-3 gap-6">
-                  {/* Card 1 — Party Member / Candidate */}
+                <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                  {/* Card 1 — Party Member */}
                   <div
-                    className="relative flex flex-col bg-white border-2 border-green-200 rounded-2xl shadow-lg overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 animate-fade-in"
+                    className="relative flex flex-col bg-white border-2 border-green-500 rounded-3xl shadow-xl overflow-hidden hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 animate-fade-in group"
                     style={{ animationDelay: "100ms" }}
                   >
-                    <div className="bg-gradient-to-br from-green-600 to-green-800 p-6 text-white">
-                      <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center mb-4">
-                        <Users size={28} className="text-white" />
+                    {/* Gradient accent bar */}
+                    <div className="h-2 bg-gradient-to-r from-green-600 via-green-500 to-emerald-400" />
+                    <div className="bg-gradient-to-br from-green-700 via-green-800 to-green-900 p-8 text-white relative overflow-hidden">
+                      {/* Decorative circles */}
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/20 rounded-full -mr-16 -mt-16" />
+                      <div className="absolute bottom-0 left-0 w-24 h-24 bg-emerald-400/10 rounded-full -ml-12 -mb-12" />
+
+                      <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mb-4 backdrop-blur-sm">
+                        <Users size={32} className="text-white" />
                       </div>
-                      <h2 className="text-xl font-bold">
-                        Party Member / Candidate
-                      </h2>
+                      <h2 className="text-2xl font-bold mb-1">Party Member</h2>
+                      <p className="text-green-200 text-sm">Join the Movement</p>
                     </div>
-                    <div className="flex flex-col flex-1 p-6">
-                      <p className="text-gray-600 mb-4 leading-relaxed">
+                    <div className="flex flex-col flex-1 p-8">
+                      <p className="text-gray-600 mb-6 leading-relaxed">
                         Join the movement as a registered party member and help
                         shape South Africa's democratic future from the ground
                         up.
                       </p>
-                      <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-2 mb-6 inline-flex items-center gap-2">
-                        <CheckCircle2
-                          size={16}
-                          className="text-green-600 shrink-0"
-                        />
-                        <span className="text-green-800 text-sm font-medium">
-                          Official membership certificate &amp; number
-                        </span>
+
+                      <div className="space-y-3 mb-6">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                            <CheckCircle2 size={18} className="text-green-600" />
+                          </div>
+                          <span className="text-gray-700 text-sm font-medium">Official membership certificate</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                            <CheckCircle2 size={18} className="text-green-600" />
+                          </div>
+                          <span className="text-gray-700 text-sm font-medium">Unique membership number</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                            <CheckCircle2 size={18} className="text-green-600" />
+                          </div>
+                          <span className="text-gray-700 text-sm font-medium">Be part of the change</span>
+                        </div>
                       </div>
+
                       <div className="mt-auto">
                         <Button
-                          onClick={() => setSelectedRole("candidate")}
-                          className="w-full bg-green-700 hover:bg-green-800 text-white gap-2"
+                          onClick={() => {
+                            setIsCouncillorCandidate(false);
+                            setSelectedRole("candidate");
+                          }}
+                          className="w-full bg-gradient-to-r from-green-700 to-green-800 hover:from-green-800 hover:to-green-900 text-white gap-2 shadow-lg shadow-green-700/25"
                           size="lg"
                         >
-                          Select
+                          Join Now
                           <ChevronRight size={18} />
                         </Button>
                       </div>
@@ -844,53 +748,77 @@ const Join = () => {
 
                   {/* Card 2 — Councillor Candidate */}
                   <div
-                    className="relative flex flex-col bg-white border-2 border-yellow-400 rounded-2xl shadow-lg overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 animate-fade-in"
+                    className="relative flex flex-col bg-white border-2 border-yellow-500 rounded-3xl shadow-xl overflow-hidden hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 animate-fade-in group"
                     style={{ animationDelay: "200ms" }}
                   >
-                    {/* Popular badge */}
-                    <div className="absolute top-4 right-4 bg-yellow-400 text-green-900 text-xs font-bold px-3 py-1 rounded-full shadow">
-                      HIGH EARNING
-                    </div>
-                    <div className="bg-gradient-to-br from-green-900 to-green-700 p-6 text-white">
-                      <div className="w-14 h-14 bg-yellow-400/20 rounded-xl flex items-center justify-center mb-4">
-                        <Building2 size={28} className="text-yellow-300" />
+                    {/* Featured badge */}
+                    <div className="absolute top-0 right-0 z-10">
+                      <div className="bg-gradient-to-r from-yellow-400 to-amber-500 text-green-900 text-xs font-bold px-4 py-2 rounded-bl-xl rounded-tr-2xl shadow-lg">
+                        LEADERSHIP
                       </div>
-                      <h2 className="text-xl font-bold">
-                        Councillor Candidate
-                      </h2>
                     </div>
-                    <div className="flex flex-col flex-1 p-6">
+
+                    {/* Gradient accent bar */}
+                    <div className="h-2 bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-600" />
+
+                    <div className="bg-gradient-to-br from-green-900 via-green-800 to-emerald-900 p-8 text-white relative overflow-hidden">
+                      {/* Decorative elements */}
+                      <div className="absolute top-0 right-0 w-40 h-40 bg-yellow-400/10 rounded-full -mr-20 -mt-20" />
+                      <div className="absolute bottom-0 left-0 w-32 h-32 bg-green-500/20 rounded-full -ml-16 -mb-16" />
+
+                      <div className="w-16 h-16 bg-yellow-400/30 rounded-2xl flex items-center justify-center mb-4 backdrop-blur-sm">
+                        <Building2 size={32} className="text-yellow-300" />
+                      </div>
+                      <h2 className="text-2xl font-bold mb-1">Councillor Candidate</h2>
+                      <p className="text-yellow-200 text-sm">Lead Your Community</p>
+                    </div>
+
+                    <div className="flex flex-col flex-1 p-8">
                       {/* Earning highlight */}
-                      <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 border-2 border-yellow-400 rounded-xl px-4 py-3 mb-4 text-center">
+                      <div className="bg-gradient-to-r from-yellow-50 via-amber-50 to-yellow-100 border-2 border-yellow-400 rounded-xl px-4 py-4 mb-6 text-center">
                         <p className="text-xs font-semibold text-yellow-700 uppercase tracking-wider mb-1">
-                          Earning Potential
+                          Professional Salary
                         </p>
-                        <p className="text-2xl font-extrabold text-green-900">
+                        <p className="text-3xl font-extrabold text-green-900">
                           R49,000 – R100,000
                         </p>
                         <p className="text-sm font-semibold text-yellow-700">
                           per month
                         </p>
                       </div>
-                      <p className="text-gray-600 mb-2 leading-relaxed text-sm">
-                        Represent your community in one of South Africa's major
-                        metros and earn a competitive salary as a ward
-                        councillor.
+
+                      <p className="text-gray-600 mb-6 leading-relaxed">
+                        Step up as a Ward Councillor. Represent your community, make real decisions, and earn a professional salary while creating lasting change.
                       </p>
-                      <div className="flex flex-wrap gap-2 mb-6">
-                        {["Joburg", "Ekurhuleni", "Tshwane"].map((metro) => (
-                          <span
-                            key={metro}
-                            className="bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded-full border border-green-300"
-                          >
-                            {metro}
-                          </span>
-                        ))}
+
+                      <div className="space-y-3 mb-6">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+                            <CheckCircle2 size={18} className="text-yellow-600" />
+                          </div>
+                          <span className="text-gray-700 text-sm font-medium">Official membership + certificate</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+                            <CheckCircle2 size={18} className="text-yellow-600" />
+                          </div>
+                          <span className="text-gray-700 text-sm font-medium">Professional salary & benefits</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+                            <CheckCircle2 size={18} className="text-yellow-600" />
+                          </div>
+                          <span className="text-gray-700 text-sm font-medium">Lead and transform your ward</span>
+                        </div>
                       </div>
+
                       <div className="mt-auto">
                         <Button
-                          onClick={() => setSelectedRole("councillor")}
-                          className="w-full bg-green-900 hover:bg-green-950 text-yellow-300 border border-yellow-400 gap-2"
+                          onClick={() => {
+                            setIsCouncillorCandidate(true);
+                            setSelectedRole("candidate");
+                          }}
+                          className="w-full bg-gradient-to-r from-green-900 to-green-800 hover:from-green-950 hover:to-green-900 text-yellow-300 border-2 border-yellow-400 gap-2 shadow-lg shadow-green-900/25"
                           size="lg"
                         >
                           Apply Now
@@ -899,676 +827,6 @@ const Join = () => {
                       </div>
                     </div>
                   </div>
-
-                  {/* Card 3 — Investor */}
-                  <div
-                    className="relative flex flex-col bg-white border-2 border-blue-200 rounded-2xl shadow-lg overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 animate-fade-in"
-                    style={{ animationDelay: "300ms" }}
-                  >
-                    <div className="bg-gradient-to-br from-slate-800 to-blue-900 p-6 text-white">
-                      <div className="w-14 h-14 bg-blue-400/20 rounded-xl flex items-center justify-center mb-4">
-                        <TrendingUp size={28} className="text-blue-300" />
-                      </div>
-                      <h2 className="text-xl font-bold">Investor</h2>
-                    </div>
-                    <div className="flex flex-col flex-1 p-6">
-                      <p className="text-gray-600 mb-4 leading-relaxed">
-                        Invest in South Africa's future. Partner with us to fund
-                        campaigns, community development, and nation-building
-                        initiatives.
-                      </p>
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 mb-6 inline-flex items-center gap-2">
-                        <TrendingUp
-                          size={16}
-                          className="text-blue-600 shrink-0"
-                        />
-                        <span className="text-blue-800 text-sm font-medium">
-                          Multiple investment tiers available
-                        </span>
-                      </div>
-                      <div className="mt-auto">
-                        <Button
-                          onClick={() => setSelectedRole("investor")}
-                          className="w-full bg-slate-800 hover:bg-slate-900 text-white gap-2"
-                          size="lg"
-                        >
-                          Invest Now
-                          <ChevronRight size={18} />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
-
-  // ══════════════════════════════════════════════════════════════════════════════
-  // RENDER: Councillor Flow
-  // ══════════════════════════════════════════════════════════════════════════════
-  if (selectedRole === "councillor") {
-    if (councillorSubmitted) {
-      return (
-        <div className="min-h-screen">
-          <Navigation />
-          <main className="pt-16">
-            <section className="py-20 bg-muted/30">
-              <div className="container mx-auto px-4">
-                <div className="max-w-2xl mx-auto bg-white p-10 rounded-2xl shadow-elegant text-center animate-fade-in border-2 border-green-800">
-                  <div className="animate-scale-in">
-                    <CheckCircle2 className="w-20 h-20 text-yellow-500 mx-auto mb-6" />
-                  </div>
-                  <h1
-                    className="text-3xl font-bold mb-3 text-green-900"
-                    style={{ animationDelay: "200ms" }}
-                  >
-                    Application Received!
-                  </h1>
-                  <p
-                    className="text-xl mb-4 text-green-800 font-semibold"
-                    style={{ animationDelay: "300ms" }}
-                  >
-                    Thank you, {councillorData.fullName}!
-                  </p>
-                  <p
-                    className="text-gray-600 mb-8 leading-relaxed"
-                    style={{ animationDelay: "400ms" }}
-                  >
-                    We have received your councillor application for{" "}
-                    <strong>{councillorData.municipality}</strong>. Our team
-                    will contact you as soon as possible to discuss next steps.
-                  </p>
-                  <div className="bg-yellow-50 border-2 border-yellow-400 rounded-xl px-6 py-4 mb-8 inline-block">
-                    <p className="text-sm font-semibold text-yellow-700 uppercase tracking-wider mb-1">
-                      Earning Potential
-                    </p>
-                    <p className="text-3xl font-extrabold text-green-900">
-                      R49,000 – R100,000 pm
-                    </p>
-                  </div>
-                  <p className="text-green-800 font-semibold text-lg">
-                    We'll contact you ASAP!
-                  </p>
-                  <Button
-                    onClick={() => setSelectedRole(null)}
-                    variant="outline"
-                    className="mt-8 gap-2 border-green-800 text-green-800 hover:bg-green-50"
-                  >
-                    <ArrowLeft size={16} />
-                    Back to Home
-                  </Button>
-                </div>
-              </div>
-            </section>
-          </main>
-          <Footer />
-        </div>
-      );
-    }
-
-    return (
-      <div className="min-h-screen">
-        <Navigation />
-        <main className="pt-16">
-          <section className="py-20 bg-muted/30">
-            <div className="container mx-auto px-4">
-              <div className="max-w-2xl mx-auto">
-                {/* Change role button */}
-                <button
-                  onClick={() => setSelectedRole(null)}
-                  className="flex items-center gap-1 text-green-800 hover:text-green-600 font-medium mb-6 transition-colors"
-                >
-                  <ChevronLeft size={18} />
-                  Change role
-                </button>
-
-                {/* Header */}
-                <div className="bg-gradient-to-br from-green-900 to-green-700 p-8 rounded-t-2xl text-white">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-12 h-12 bg-yellow-400/20 rounded-xl flex items-center justify-center">
-                      <Building2 size={24} className="text-yellow-300" />
-                    </div>
-                    <div>
-                      <h1 className="text-2xl font-bold">
-                        Councillor Candidate
-                      </h1>
-                      <p className="text-green-200 text-sm">
-                        Shosholoza Progressive Party
-                      </p>
-                    </div>
-                  </div>
-                  {/* Earnings banner */}
-                  <div className="bg-yellow-400/20 border border-yellow-400/50 rounded-xl px-5 py-4 mt-4">
-                    <p className="text-yellow-300 text-xs font-bold uppercase tracking-wider mb-1">
-                      Earn as a Councillor
-                    </p>
-                    <p className="text-white text-2xl font-extrabold">
-                      R49,000 – R100,000{" "}
-                      <span className="text-lg font-semibold">per month</span>
-                    </p>
-                    <p className="text-green-200 text-sm mt-1">
-                      Represent Joburg / Ekurhuleni / Tshwane
-                    </p>
-                  </div>
-                </div>
-
-                {/* Form */}
-                <div className="bg-white p-8 rounded-b-2xl shadow-elegant border-x border-b border-green-200">
-                  <form onSubmit={handleCouncillorSubmit} className="space-y-5">
-                    {/* Full Name */}
-                    <div>
-                      <Label
-                        htmlFor="c-fullName"
-                        className="text-green-900 font-semibold"
-                      >
-                        Full Name <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="c-fullName"
-                        value={councillorData.fullName}
-                        onChange={(e) =>
-                          setCouncillorData({
-                            ...councillorData,
-                            fullName: e.target.value,
-                          })
-                        }
-                        placeholder="Your full name"
-                        className="mt-1 border-green-200 focus-visible:ring-green-600"
-                      />
-                      {councillorErrors.fullName && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {councillorErrors.fullName}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Email */}
-                    <div>
-                      <Label
-                        htmlFor="c-email"
-                        className="text-green-900 font-semibold"
-                      >
-                        Email Address <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="c-email"
-                        type="email"
-                        value={councillorData.email}
-                        onChange={(e) =>
-                          setCouncillorData({
-                            ...councillorData,
-                            email: e.target.value,
-                          })
-                        }
-                        placeholder="you@example.com"
-                        className="mt-1 border-green-200 focus-visible:ring-green-600"
-                      />
-                      {councillorErrors.email && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {councillorErrors.email}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Phone */}
-                    <div>
-                      <Label
-                        htmlFor="c-phone"
-                        className="text-green-900 font-semibold"
-                      >
-                        Phone Number <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="c-phone"
-                        type="tel"
-                        value={councillorData.phone}
-                        onChange={(e) =>
-                          setCouncillorData({
-                            ...councillorData,
-                            phone: e.target.value,
-                          })
-                        }
-                        placeholder="+27 XX XXX XXXX"
-                        className="mt-1 border-green-200 focus-visible:ring-green-600"
-                      />
-                      {councillorErrors.phone && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {councillorErrors.phone}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Municipality */}
-                    <div>
-                      <Label
-                        htmlFor="c-municipality"
-                        className="text-green-900 font-semibold"
-                      >
-                        Preferred Municipality{" "}
-                        <span className="text-red-500">*</span>
-                      </Label>
-                      <Select
-                        value={councillorData.municipality}
-                        onValueChange={(v) =>
-                          setCouncillorData({
-                            ...councillorData,
-                            municipality: v,
-                          })
-                        }
-                      >
-                        <SelectTrigger className="mt-1 border-green-200 focus:ring-green-600">
-                          <SelectValue placeholder="Select municipality" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="City of Johannesburg">
-                            City of Johannesburg (Joburg)
-                          </SelectItem>
-                          <SelectItem value="Ekurhuleni">Ekurhuleni</SelectItem>
-                          <SelectItem value="City of Tshwane">
-                            City of Tshwane (Tshwane)
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                      {councillorErrors.municipality && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {councillorErrors.municipality}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Motivation */}
-                    <div>
-                      <Label
-                        htmlFor="c-motivation"
-                        className="text-green-900 font-semibold"
-                      >
-                        Brief Motivation{" "}
-                        <span className="text-gray-400 font-normal">
-                          (optional)
-                        </span>
-                      </Label>
-                      <Textarea
-                        id="c-motivation"
-                        value={councillorData.motivation}
-                        onChange={(e) =>
-                          setCouncillorData({
-                            ...councillorData,
-                            motivation: e.target.value,
-                          })
-                        }
-                        placeholder="Why do you want to become a councillor? What will you bring to your community?"
-                        rows={4}
-                        className="mt-1 border-green-200 focus-visible:ring-green-600"
-                      />
-                    </div>
-
-                    <Button
-                      type="submit"
-                      size="lg"
-                      disabled={councillorLoading}
-                      className="w-full bg-green-900 hover:bg-green-950 text-yellow-300 border border-yellow-400 gap-2 mt-2"
-                    >
-                      {councillorLoading ? (
-                        <>
-                          <Loader2 size={18} className="animate-spin" />
-                          Submitting…
-                        </>
-                      ) : (
-                        <>
-                          Submit Application
-                          <ChevronRight size={18} />
-                        </>
-                      )}
-                    </Button>
-                  </form>
-                </div>
-              </div>
-            </div>
-          </section>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
-
-  // ══════════════════════════════════════════════════════════════════════════════
-  // RENDER: Investor Flow
-  // ══════════════════════════════════════════════════════════════════════════════
-  if (selectedRole === "investor") {
-    if (investorSubmitted) {
-      return (
-        <div className="min-h-screen">
-          <Navigation />
-          <main className="pt-16">
-            <section className="py-20 bg-muted/30">
-              <div className="container mx-auto px-4">
-                <div className="max-w-2xl mx-auto bg-white p-10 rounded-2xl shadow-elegant text-center animate-fade-in border-2 border-slate-700">
-                  <div className="animate-scale-in">
-                    <CheckCircle2 className="w-20 h-20 text-blue-500 mx-auto mb-6" />
-                  </div>
-                  <h1 className="text-3xl font-bold mb-3 text-slate-800">
-                    Inquiry Received!
-                  </h1>
-                  <p className="text-xl mb-4 text-slate-700 font-semibold">
-                    Thank you, {investorData.fullName}!
-                  </p>
-                  <p className="text-gray-600 mb-8 leading-relaxed">
-                    We have received your investment inquiry for{" "}
-                    <strong>{investorData.areaOfInterest}</strong>. Our team
-                    will review your submission and reach out to discuss
-                    partnership opportunities.
-                  </p>
-                  <div className="bg-blue-50 border-2 border-blue-300 rounded-xl px-6 py-4 mb-8 inline-block">
-                    <p className="text-sm font-semibold text-blue-700 uppercase tracking-wider mb-1">
-                      Investment Range
-                    </p>
-                    <p className="text-2xl font-extrabold text-slate-800">
-                      {investorData.investmentRange}
-                    </p>
-                  </div>
-                  <p className="text-slate-700 font-semibold text-lg">
-                    Our team will reach out to you shortly.
-                  </p>
-                  <Button
-                    onClick={() => setSelectedRole(null)}
-                    variant="outline"
-                    className="mt-8 gap-2 border-slate-700 text-slate-700 hover:bg-slate-50"
-                  >
-                    <ArrowLeft size={16} />
-                    Back to Home
-                  </Button>
-                </div>
-              </div>
-            </section>
-          </main>
-          <Footer />
-        </div>
-      );
-    }
-
-    return (
-      <div className="min-h-screen">
-        <Navigation />
-        <main className="pt-16">
-          <section className="py-20 bg-muted/30">
-            <div className="container mx-auto px-4">
-              <div className="max-w-2xl mx-auto">
-                {/* Change role button */}
-                <button
-                  onClick={() => setSelectedRole(null)}
-                  className="flex items-center gap-1 text-slate-700 hover:text-slate-500 font-medium mb-6 transition-colors"
-                >
-                  <ChevronLeft size={18} />
-                  Change role
-                </button>
-
-                {/* Header */}
-                <div className="bg-gradient-to-br from-slate-800 to-blue-900 p-8 rounded-t-2xl text-white">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-blue-400/20 rounded-xl flex items-center justify-center">
-                      <TrendingUp size={24} className="text-blue-300" />
-                    </div>
-                    <div>
-                      <h1 className="text-2xl font-bold">Investor Inquiry</h1>
-                      <p className="text-blue-200 text-sm">
-                        Invest in South Africa's future
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Form */}
-                <div className="bg-white p-8 rounded-b-2xl shadow-elegant border-x border-b border-slate-200">
-                  <form onSubmit={handleInvestorSubmit} className="space-y-5">
-                    {/* Full Name + Email */}
-                    <div className="grid md:grid-cols-2 gap-5">
-                      <div>
-                        <Label
-                          htmlFor="i-fullName"
-                          className="text-slate-800 font-semibold"
-                        >
-                          Full Name <span className="text-red-500">*</span>
-                        </Label>
-                        <Input
-                          id="i-fullName"
-                          value={investorData.fullName}
-                          onChange={(e) =>
-                            setInvestorData({
-                              ...investorData,
-                              fullName: e.target.value,
-                            })
-                          }
-                          placeholder="Your full name"
-                          className="mt-1 border-slate-300 focus-visible:ring-blue-600"
-                        />
-                        {investorErrors.fullName && (
-                          <p className="text-red-500 text-sm mt-1">
-                            {investorErrors.fullName}
-                          </p>
-                        )}
-                      </div>
-                      <div>
-                        <Label
-                          htmlFor="i-email"
-                          className="text-slate-800 font-semibold"
-                        >
-                          Email Address <span className="text-red-500">*</span>
-                        </Label>
-                        <Input
-                          id="i-email"
-                          type="email"
-                          value={investorData.email}
-                          onChange={(e) =>
-                            setInvestorData({
-                              ...investorData,
-                              email: e.target.value,
-                            })
-                          }
-                          placeholder="you@example.com"
-                          className="mt-1 border-slate-300 focus-visible:ring-blue-600"
-                        />
-                        {investorErrors.email && (
-                          <p className="text-red-500 text-sm mt-1">
-                            {investorErrors.email}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Phone + Company */}
-                    <div className="grid md:grid-cols-2 gap-5">
-                      <div>
-                        <Label
-                          htmlFor="i-phone"
-                          className="text-slate-800 font-semibold"
-                        >
-                          Phone Number <span className="text-red-500">*</span>
-                        </Label>
-                        <Input
-                          id="i-phone"
-                          type="tel"
-                          value={investorData.phone}
-                          onChange={(e) =>
-                            setInvestorData({
-                              ...investorData,
-                              phone: e.target.value,
-                            })
-                          }
-                          placeholder="+27 XX XXX XXXX"
-                          className="mt-1 border-slate-300 focus-visible:ring-blue-600"
-                        />
-                        {investorErrors.phone && (
-                          <p className="text-red-500 text-sm mt-1">
-                            {investorErrors.phone}
-                          </p>
-                        )}
-                      </div>
-                      <div>
-                        <Label
-                          htmlFor="i-company"
-                          className="text-slate-800 font-semibold"
-                        >
-                          Company / Organisation{" "}
-                          <span className="text-gray-400 font-normal">
-                            (optional)
-                          </span>
-                        </Label>
-                        <Input
-                          id="i-company"
-                          value={investorData.company}
-                          onChange={(e) =>
-                            setInvestorData({
-                              ...investorData,
-                              company: e.target.value,
-                            })
-                          }
-                          placeholder="Your company or organisation"
-                          className="mt-1 border-slate-300 focus-visible:ring-blue-600"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Investment Range */}
-                    <div>
-                      <Label
-                        htmlFor="i-range"
-                        className="text-slate-800 font-semibold"
-                      >
-                        Investment Range <span className="text-red-500">*</span>
-                      </Label>
-                      <Select
-                        value={investorData.investmentRange}
-                        onValueChange={(v) =>
-                          setInvestorData({
-                            ...investorData,
-                            investmentRange: v,
-                          })
-                        }
-                      >
-                        <SelectTrigger className="mt-1 border-slate-300 focus:ring-blue-600">
-                          <SelectValue placeholder="Select investment range" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Under R50,000">
-                            Under R50,000
-                          </SelectItem>
-                          <SelectItem value="R50,000–R100,000">
-                            R50,000 – R100,000
-                          </SelectItem>
-                          <SelectItem value="R100,000–R500,000">
-                            R100,000 – R500,000
-                          </SelectItem>
-                          <SelectItem value="R500,000–R1,000,000">
-                            R500,000 – R1,000,000
-                          </SelectItem>
-                          <SelectItem value="R1,000,000+">
-                            R1,000,000+
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                      {investorErrors.investmentRange && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {investorErrors.investmentRange}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Area of Interest */}
-                    <div>
-                      <Label
-                        htmlFor="i-area"
-                        className="text-slate-800 font-semibold"
-                      >
-                        Area of Interest <span className="text-red-500">*</span>
-                      </Label>
-                      <Select
-                        value={investorData.areaOfInterest}
-                        onValueChange={(v) =>
-                          setInvestorData({
-                            ...investorData,
-                            areaOfInterest: v,
-                          })
-                        }
-                      >
-                        <SelectTrigger className="mt-1 border-slate-300 focus:ring-blue-600">
-                          <SelectValue placeholder="Select area of interest" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Political Campaign Funding">
-                            Political Campaign Funding
-                          </SelectItem>
-                          <SelectItem value="Community Development">
-                            Community Development
-                          </SelectItem>
-                          <SelectItem value="Infrastructure">
-                            Infrastructure
-                          </SelectItem>
-                          <SelectItem value="Technology & Digital">
-                            Technology &amp; Digital
-                          </SelectItem>
-                          <SelectItem value="Other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      {investorErrors.areaOfInterest && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {investorErrors.areaOfInterest}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Message */}
-                    <div>
-                      <Label
-                        htmlFor="i-message"
-                        className="text-slate-800 font-semibold"
-                      >
-                        Message / How can we work together?{" "}
-                        <span className="text-red-500">*</span>
-                      </Label>
-                      <Textarea
-                        id="i-message"
-                        value={investorData.message}
-                        onChange={(e) =>
-                          setInvestorData({
-                            ...investorData,
-                            message: e.target.value,
-                          })
-                        }
-                        placeholder="Tell us about your investment goals and how you envision working with Shosholoza Progressive Party…"
-                        rows={5}
-                        className="mt-1 border-slate-300 focus-visible:ring-blue-600"
-                      />
-                      {investorErrors.message && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {investorErrors.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <Button
-                      type="submit"
-                      size="lg"
-                      disabled={investorLoading}
-                      className="w-full bg-slate-800 hover:bg-slate-900 text-white gap-2 mt-2"
-                    >
-                      {investorLoading ? (
-                        <>
-                          <Loader2 size={18} className="animate-spin" />
-                          Submitting…
-                        </>
-                      ) : (
-                        <>
-                          Submit Inquiry
-                          <ChevronRight size={18} />
-                        </>
-                      )}
-                    </Button>
-                  </form>
                 </div>
               </div>
             </div>
@@ -1604,17 +862,27 @@ const Join = () => {
                   style={{ animationDelay: "300ms" }}
                 >
                   Your membership has been successfully registered.
+                  {isCouncillorCandidate && (
+                    <span className="block mt-2 text-green-700 font-semibold">
+                      Your councillor candidacy has also been submitted and will be reviewed.
+                    </span>
+                  )}
                 </p>
                 <div
-                  className="bg-muted p-6 rounded-lg mb-8 animate-fade-in"
+                  className={`p-6 rounded-lg mb-8 animate-fade-in ${isCouncillorCandidate ? 'bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-400' : 'bg-muted'}`}
                   style={{ animationDelay: "400ms" }}
                 >
-                  <p className="text-sm text-muted-foreground mb-2">
+                  <p className={`text-sm mb-2 ${isCouncillorCandidate ? 'text-yellow-700' : 'text-muted-foreground'}`}>
                     Your Membership Number
                   </p>
-                  <p className="text-2xl font-bold text-green-700">
+                  <p className={`text-2xl font-bold ${isCouncillorCandidate ? 'text-green-900' : 'text-green-700'}`}>
                     {membershipNumber}
                   </p>
+                  {isCouncillorCandidate && (
+                    <p className="text-xs text-yellow-600 mt-2">
+                      Official Party Member + Councillor Candidate
+                    </p>
+                  )}
                 </div>
                 <p
                   className="text-muted-foreground mb-8 animate-fade-in"
@@ -1660,15 +928,20 @@ const Join = () => {
               </button>
 
               {/* Header */}
-              <div className="bg-card p-8 rounded-t-lg shadow-elegant border-b-2 border-green-600 animate-fade-in">
+              <div className={`bg-card p-8 rounded-t-lg shadow-elegant border-b-2 animate-fade-in ${isCouncillorCandidate ? 'border-yellow-500' : 'border-green-600'}`}>
                 <div className="flex justify-between items-start">
                   <div>
                     <h1 className="text-3xl font-bold mb-2">
                       Shosholoza Progressive Party (Shosh)
                     </h1>
-                    <h2 className="text-xl text-muted-foreground">
-                      MEMBERSHIP FORM
+                    <h2 className={`text-xl ${isCouncillorCandidate ? 'text-yellow-700 font-semibold' : 'text-muted-foreground'}`}>
+                      {isCouncillorCandidate ? 'MEMBERSHIP + COUNCILLOR CANDIDACY FORM' : 'MEMBERSHIP FORM'}
                     </h2>
+                    {isCouncillorCandidate && (
+                      <p className="text-sm text-yellow-600 mt-1">
+                        Professional salary: R49,000 – R100,000 per month
+                      </p>
+                    )}
                   </div>
                   <div className="text-right">
                     <p className="text-2xl italic text-gray-400">Shhh...</p>
@@ -2005,6 +1278,76 @@ const Join = () => {
                             )}
                           </div>
                         </div>
+
+                        {/* Councillor Candidate Section */}
+                        {isCouncillorCandidate && (
+                          <div className="mt-8 pt-6 border-t-2 border-yellow-200">
+                            <div className="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl p-6 border-2 border-yellow-400">
+                              <div className="flex items-center gap-3 mb-4">
+                                <div className="w-10 h-10 bg-yellow-500 rounded-xl flex items-center justify-center">
+                                  <Building2 size={24} className="text-white" />
+                                </div>
+                                <div>
+                                  <h4 className="font-bold text-green-900 text-lg">Councillor Application</h4>
+                                  <p className="text-yellow-700 text-sm">Additional information for your candidacy</p>
+                                </div>
+                              </div>
+
+                              <div className="space-y-5">
+                                <div>
+                                  <Label htmlFor="municipality">
+                                    Preferred Municipality{" "}
+                                    <span className="text-red-500">*</span>
+                                  </Label>
+                                  <Select
+                                    value={formData.municipality}
+                                    onValueChange={(value) =>
+                                      setFormData({ ...formData, municipality: value })
+                                    }
+                                  >
+                                    <SelectTrigger className="mt-2">
+                                      <SelectValue placeholder="Select municipality" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="City of Johannesburg">
+                                        City of Johannesburg (Joburg)
+                                      </SelectItem>
+                                      <SelectItem value="Ekurhuleni">Ekurhuleni</SelectItem>
+                                      <SelectItem value="City of Tshwane">
+                                        City of Tshwane (Tshwane)
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  {errors.municipality && (
+                                    <p className="text-red-500 text-sm mt-1">
+                                      {errors.municipality}
+                                    </p>
+                                  )}
+                                </div>
+
+                                <div>
+                                  <Label htmlFor="motivation">
+                                    Brief Motivation{" "}
+                                    <span className="text-gray-400 font-normal">(optional)</span>
+                                  </Label>
+                                  <Textarea
+                                    id="motivation"
+                                    value={formData.motivation}
+                                    onChange={(e) =>
+                                      setFormData({
+                                        ...formData,
+                                        motivation: e.target.value,
+                                      })
+                                    }
+                                    placeholder="Why do you want to become a councillor? What will you bring to your community?"
+                                    className="mt-2"
+                                    rows={4}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}

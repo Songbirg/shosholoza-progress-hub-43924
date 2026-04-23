@@ -1,7 +1,10 @@
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import { useTypewriter } from "@/hooks/useTypewriter";
 
 const About = () => {
+  const title = useTypewriter("About Shosholoza Progressive Party", 26, 120);
+
   return (
     <div className="min-h-screen">
       <Navigation />
@@ -9,7 +12,7 @@ const About = () => {
         <section className="py-20 bg-muted/30">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
-              <h1 className="mb-8 animate-fade-in">About Shosholoza Progressive Party</h1>
+              <h1 className="mb-8 animate-fade-in">{title}</h1>
               
               <div className="prose prose-lg max-w-none space-y-6 text-foreground">
                 <div className="bg-card p-8 rounded-lg shadow-elegant animate-fade-in" style={{ animationDelay: '100ms' }}>

@@ -28,3 +28,6 @@ dist-ssr
 
 # Local environment variables
 .env
+
+# Vite timestamp artifacts
+vite.config.ts.timestamp-*.mjs
