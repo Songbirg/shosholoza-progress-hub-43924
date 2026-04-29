@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { Facebook, Twitter, Instagram, Youtube } from "lucide-react";
+import { Facebook, Twitter, Instagram, Youtube, FileText } from "lucide-react";
+import manifestoPdf from "../../images/Manifesto 2026 .pdf";
 
 const Footer = () => {
   return (
@@ -30,6 +31,17 @@ const Footer = () => {
                 <Link to="/values" className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-smooth">
                   Our Values
                 </Link>
+              </li>
+              <li>
+                <a 
+                  href={manifestoPdf}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-smooth flex items-center gap-1"
+                >
+                  <FileText className="w-4 h-4" />
+                  Download Manifesto
+                </a>
               </li>
             </ul>
           </div>

@@ -3,6 +3,7 @@ import { Button } from "./ui/button";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Zap, GraduationCap, Shield, Users, Building2 } from "lucide-react";
 import ParticleWave from "@/components/ParticleWave";
 
 // Import slide images from the images folder (relative path from src/components)
@@ -22,64 +23,70 @@ interface Slide {
   textPosition: "center" | "left" | "right";
   primaryButton: string;
   secondaryButton: string;
+  icon: React.ElementType;
 }
 
-// 5 Slides with unique effects (zoom/slide/fade), text positions, and messaging
+// 5 Point Plan Slides - each slide represents one point of the plan
 const slides: Slide[] = [
   {
     id: 1,
-    image: slide1, // Founder/Leader with Shhh logo - ZOOM effect
-    title: "Shhh... Change is Coming",
-    subtitle: "Leadership",
-    description: "A new voice for South Africa. Join the movement that's quietly transforming our nation from the ground up.",
+    image: slide1,
+    title: "Quality Service Delivery",
+    subtitle: "Point 1 - Power to the People",
+    description: "Regional management offices for community-based service delivery. Outsourcing waste, potholes, electricity & water repairs to community cooperatives.",
     effect: "zoom",
     textPosition: "left",
     primaryButton: "Join SHOSH",
-    secondaryButton: "Meet Our Founder",
+    secondaryButton: "Our Vision",
+    icon: Zap,
   },
   {
     id: 2,
-    image: slide2, // Mother & child at rally - FADE effect
-    title: "For Our Children's Future",
-    subtitle: "Family & Community",
-    description: "Every South African family deserves security, opportunity, and a voice in their community. Together, we build for the next generation.",
+    image: slide2,
+    title: "Job Creation & Skills",
+    subtitle: "Point 2 - Opportunities for All",
+    description: "Job Centres in every community with free Wi-Fi, local job advertising, and youth training for real work opportunities.",
     effect: "fade",
     textPosition: "right",
     primaryButton: "Get Involved",
-    secondaryButton: "Our Vision",
+    secondaryButton: "Learn More",
+    icon: GraduationCap,
   },
   {
     id: 3,
-    image: slide3, // Blue shirt crowd marching - SLIDE effect
-    title: "March With Us",
-    subtitle: "Youth Power",
-    description: "Thousands of young South Africans are already marching toward change. Be part of the movement that's taking our streets and our future back.",
+    image: slide3,
+    title: "Zero Tolerance for Corruption",
+    subtitle: "Point 3 - Transparency First",
+    description: "Dismantling municipal corruption networks. Prosecuting water tank mafias & tender cartels. Local Anti-Corruption Units with lifestyle audits.",
     effect: "slide",
     textPosition: "center",
     primaryButton: "Become a Member",
-    secondaryButton: "Local Chapters",
+    secondaryButton: "Our Policies",
+    icon: Shield,
   },
   {
     id: 4,
-    image: slide4, // Shhh flag banner march - ZOOM effect
-    title: "Raise the Banner",
-    subtitle: "Shosholoza Progressive Party",
-    description: "From townships to cities, our banner represents hope, unity, and the silent revolution that's changing South Africa. Fly it with pride.",
+    image: slide4,
+    title: "Safe & United Communities",
+    subtitle: "Point 4 - Youth Brigades",
+    description: "National service-style Youth Brigades supporting community safety, fighting drugs & gangsterism. Instilling discipline, pride & purpose.",
     effect: "zoom",
     textPosition: "center",
-    primaryButton: "Get Your Banner",
-    secondaryButton: "Our Story",
+    primaryButton: "Support Us",
+    secondaryButton: "Read More",
+    icon: Users,
   },
   {
     id: 5,
-    image: slide5, // Close-up group singing - FADE effect
-    title: "Unity in Diversity",
-    subtitle: "One Nation",
-    description: "South Africa's strength is in its diversity. Together, we sing one song of hope, prosperity, and equal opportunity for all.",
+    image: slide5,
+    title: "Reclaim Our Cities",
+    subtitle: "Point 5 - Restore Order",
+    description: "Cleaning cities, regulating trading, supporting local entrepreneurs, funding township mini-supermarkets. Clean, modern, dignified spaces for all.",
     effect: "fade",
     textPosition: "left",
-    primaryButton: "Join Our Movement",
-    secondaryButton: "Our Values",
+    primaryButton: "Vote SHOSH",
+    secondaryButton: "Join Movement",
+    icon: Building2,
   },
 ];
 
@@ -106,7 +113,7 @@ const HeroSlider = () => {
   // Auto-play
   useEffect(() => {
     if (!isAutoPlaying) return;
-    const timer = setInterval(nextSlide, 6000);
+    const timer = setInterval(nextSlide, 5000);
     return () => clearInterval(timer);
   }, [isAutoPlaying, nextSlide]);
 

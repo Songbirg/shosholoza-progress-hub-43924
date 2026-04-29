@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Menu, X, FileText } from "lucide-react";
 import { Button } from "./ui/button";
 import shoshLogo from "@/assets/shosh-logo.png";
+import manifestoPdf from "../../images/Manifesto 2026 .pdf";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -48,6 +49,17 @@ const Navigation = () => {
                 ></span>
               </Link>
             ))}
+            <a 
+              href={manifestoPdf} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="hover-scale inline-block"
+            >
+              <Button variant="outline" size="sm" className="flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                Manifesto
+              </Button>
+            </a>
             <Link to="/candidate" className="hover-scale inline-block">
               <Button variant="hero" size="sm">
                 Join Shosh
@@ -82,8 +94,19 @@ const Navigation = () => {
                 {item.name}
               </Link>
             ))}
+            <a 
+              href={manifestoPdf} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              onClick={() => setIsOpen(false)}
+            >
+              <Button variant="outline" size="sm" className="w-full mt-4 flex items-center justify-center gap-2">
+                <FileText className="w-4 h-4" />
+                Download Manifesto
+              </Button>
+            </a>
             <Link to="/candidate" onClick={() => setIsOpen(false)}>
-              <Button variant="hero" size="sm" className="w-full mt-4">
+              <Button variant="hero" size="sm" className="w-full mt-2">
                 Join Shosh
               </Button>
             </Link>
