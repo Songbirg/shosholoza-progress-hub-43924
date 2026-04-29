@@ -4,11 +4,11 @@ import founderImage from "@/assets/founder-portrait.jpg";
 
 const Founder = () => {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-rings">
       <Navigation />
       <main className="pt-16">
-        <section className="py-20 bg-muted/30">
-          <div className="container mx-auto px-4">
+        <section className="py-20 relative overflow-hidden">
+          <div className="container mx-auto px-4 relative z-10">
             <div className="max-w-5xl mx-auto">
               <h1 className="text-center mb-12 animate-fade-in">Our Founder & President</h1>
               
@@ -34,7 +34,7 @@ const Founder = () => {
               </div>
 
               <div className="space-y-6">
-                <div className="bg-card p-8 rounded-lg shadow-elegant animate-fade-in" style={{ animationDelay: '300ms' }}>
+                <div className="bg-card/80 backdrop-blur-sm p-8 rounded-lg shadow-elegant animate-fade-in" style={{ animationDelay: '300ms' }}>
                   <h3 className="text-2xl font-bold mb-4">Liberation Struggle Contributions</h3>
                   <p className="text-muted-foreground mb-4">
                     Dr. Russon was a committed member of Umkhonto we Sizwe (MK), the armed wing of the African National 
@@ -49,7 +49,7 @@ const Founder = () => {
                   </p>
                 </div>
 
-                <div className="bg-card p-8 rounded-lg shadow-elegant animate-fade-in" style={{ animationDelay: '400ms' }}>
+                <div className="bg-card/80 backdrop-blur-sm p-8 rounded-lg shadow-elegant animate-fade-in" style={{ animationDelay: '400ms' }}>
                   <h3 className="text-2xl font-bold mb-4">Education & Background</h3>
                   <p className="text-muted-foreground mb-4">
                     Dr. Russon's commitment to learning and development has been a constant throughout his life. His academic 
@@ -62,7 +62,7 @@ const Founder = () => {
                   </p>
                 </div>
 
-                <div className="bg-card p-8 rounded-lg shadow-elegant animate-fade-in" style={{ animationDelay: '500ms' }}>
+                <div className="bg-card/80 backdrop-blur-sm p-8 rounded-lg shadow-elegant animate-fade-in" style={{ animationDelay: '500ms' }}>
                   <h3 className="text-2xl font-bold mb-4">Political Vision</h3>
                   <p className="text-muted-foreground mb-4">
                     Dr. Russon's political philosophy is grounded in the principles of social democracy—a belief that economic 
@@ -81,7 +81,7 @@ const Founder = () => {
                   </ul>
                 </div>
 
-                <div className="bg-card p-8 rounded-lg shadow-elegant animate-fade-in" style={{ animationDelay: '600ms' }}>
+                <div className="bg-card/80 backdrop-blur-sm p-8 rounded-lg shadow-elegant animate-fade-in" style={{ animationDelay: '600ms' }}>
                   <h3 className="text-2xl font-bold mb-4">The Founding of Shosholoza</h3>
                   <p className="text-muted-foreground mb-4">
                     In 2015, recognizing that South Africa needed a renewed commitment to the ideals of the liberation struggle, 
@@ -97,6 +97,9 @@ const Founder = () => {
               </div>
             </div>
           </div>
+          {/* Decorative floating elements */}
+          <div className="absolute top-20 right-20 w-40 h-40 bg-green-500/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-32 left-10 w-32 h-32 bg-yellow-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
         </section>
       </main>
       <Footer />

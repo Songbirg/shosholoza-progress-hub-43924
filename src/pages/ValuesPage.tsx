@@ -54,7 +54,7 @@ const ValuesPage = () => {
     <div className="min-h-screen">
       <Navigation />
       <main className="pt-16">
-        <section className="py-20 bg-muted/30">
+        <section className="py-20 bg-waves relative overflow-hidden">
           <div className="container mx-auto px-4">
             <ScrollInOut className="max-w-4xl mx-auto text-center mb-16">
               <h1 className="mb-6 animate-fade-in">Our Values & Principles</h1>
@@ -115,6 +115,9 @@ const ValuesPage = () => {
               </div>
             </ScrollInOut>
           </div>
+          {/* Decorative floating elements */}
+          <div className="absolute top-10 left-10 w-32 h-32 bg-green-500/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-10 right-10 w-40 h-40 bg-yellow-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
         </section>
       </main>
       <Footer />

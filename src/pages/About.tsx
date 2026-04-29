@@ -9,13 +9,13 @@ const About = () => {
     <div className="min-h-screen">
       <Navigation />
       <main className="pt-16">
-        <section className="py-20 bg-muted/30">
-          <div className="container mx-auto px-4">
+        <section className="py-20 bg-floating-shapes relative overflow-hidden">
+          <div className="container mx-auto px-4 relative z-10">
             <div className="max-w-4xl mx-auto">
               <h1 className="mb-8 animate-fade-in">{title}</h1>
               
               <div className="prose prose-lg max-w-none space-y-6 text-foreground">
-                <div className="bg-card p-8 rounded-lg shadow-elegant animate-fade-in" style={{ animationDelay: '100ms' }}>
+                <div className="bg-card/80 backdrop-blur-sm p-8 rounded-lg shadow-elegant animate-fade-in" style={{ animationDelay: '100ms' }}>
                   <h2 className="text-2xl font-bold mb-4">Our History</h2>
                   <p className="text-muted-foreground mb-4">
                     The Shosholoza Progressive Party (Shosh) was founded in 2015 with a clear vision: to build a South Africa 
@@ -30,7 +30,7 @@ const About = () => {
                   </p>
                 </div>
 
-                <div className="bg-card p-8 rounded-lg shadow-elegant animate-fade-in" style={{ animationDelay: '200ms' }}>
+                <div className="bg-card/80 backdrop-blur-sm p-8 rounded-lg shadow-elegant animate-fade-in" style={{ animationDelay: '200ms' }}>
                   <h2 className="text-2xl font-bold mb-4">Our Vision</h2>
                   <p className="text-muted-foreground mb-4">
                     We envision a South Africa where every citizen, regardless of background or circumstance, has access to:
@@ -44,7 +44,7 @@ const About = () => {
                   </ul>
                 </div>
 
-                <div className="bg-card p-8 rounded-lg shadow-elegant animate-fade-in" style={{ animationDelay: '300ms' }}>
+                <div className="bg-card/80 backdrop-blur-sm p-8 rounded-lg shadow-elegant animate-fade-in" style={{ animationDelay: '300ms' }}>
                   <h2 className="text-2xl font-bold mb-4">Our Mission</h2>
                   <p className="text-muted-foreground mb-4">
                     The Shosholoza Progressive Party is committed to advancing social democracy in South Africa through:
@@ -58,7 +58,7 @@ const About = () => {
                   </ul>
                 </div>
 
-                <div className="bg-card p-8 rounded-lg shadow-elegant animate-fade-in" style={{ animationDelay: '400ms' }}>
+                <div className="bg-card/80 backdrop-blur-sm p-8 rounded-lg shadow-elegant animate-fade-in" style={{ animationDelay: '400ms' }}>
                   <h2 className="text-2xl font-bold mb-4">Why "Shosholoza"?</h2>
                   <p className="text-muted-foreground">
                     Our name comes from the iconic South African folk song "Shosholoza," which was sung by miners as they 
@@ -70,6 +70,9 @@ const About = () => {
               </div>
             </div>
           </div>
+          {/* Decorative floating elements */}
+          <div className="absolute top-40 right-10 w-20 h-20 bg-yellow-500/10 rounded-full blur-xl animate-pulse" />
+          <div className="absolute bottom-40 left-10 w-32 h-32 bg-green-500/10 rounded-full blur-xl animate-pulse" style={{ animationDelay: '2s' }} />
         </section>
       </main>
       <Footer />

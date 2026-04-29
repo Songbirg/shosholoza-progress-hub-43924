@@ -75,7 +75,7 @@ const Contact = () => {
     <div className="min-h-screen">
       <Navigation />
       <main className="pt-16">
-        <section className="py-20 bg-muted/30">
+        <section className="py-20 bg-dots relative overflow-hidden">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto text-center mb-12">
               <h1 className="mb-6 animate-fade-in">Get in Touch</h1>
@@ -256,6 +256,10 @@ const Contact = () => {
               </div>
             </div>
           </div>
+          {/* Decorative floating elements */}
+          <div className="absolute top-20 left-20 w-40 h-40 bg-green-500/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-20 right-20 w-32 h-32 bg-yellow-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1.5s' }} />
+          <div className="absolute top-1/2 right-1/4 w-24 h-24 bg-green-600/5 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '3s' }} />
         </section>
       </main>
       <Footer />

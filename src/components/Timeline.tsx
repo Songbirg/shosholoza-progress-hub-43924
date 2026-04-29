@@ -30,14 +30,21 @@ const timelineEvents = [
 
 const Timeline = () => {
   return (
-    <section className="py-20 bg-muted/30">
-      <RevealOnScroll>
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="mb-4">Our Journey</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              From founding to the future, our commitment to South Africa remains unwavering
-            </p>
+    <section id="journey" className="py-20 px-4 bg-mesh-gradient relative overflow-hidden">
+      {/* Floating decorative elements */}
+      <div className="absolute top-10 left-10 w-32 h-32 bg-green-500/10 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute bottom-10 right-10 w-40 h-40 bg-yellow-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+      <div className="absolute top-1/2 left-1/4 w-24 h-24 bg-green-600/5 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '2s' }} />
+      
+      <div className="max-w-7xl mx-auto relative z-10">
+        <RevealOnScroll>
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-16">
+              <h2 className="mb-4">Our Journey</h2>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                From founding to the future, our commitment to South Africa remains unwavering
+              </p>
+            </div>
           </div>
 
           <div className="max-w-5xl mx-auto">
@@ -67,8 +74,8 @@ const Timeline = () => {
               })}
             </div>
           </div>
-        </div>
-      </RevealOnScroll>
+        </RevealOnScroll>
+      </div>
     </section>
   );
 };

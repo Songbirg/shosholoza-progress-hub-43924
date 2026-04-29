@@ -25,14 +25,18 @@ const values = [
 
 const Values = () => {
   return (
-    <section className="py-20 relative overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-        <div className="bubble-morph blob-1" />
-        <div className="bubble-morph blob-2" />
-      </div>
-      <div className="container mx-auto px-4 relative">
-        <div className="text-center mb-16">
-          <h2 className="mb-4">Our Core Values</h2>
+    <section id="values" className="py-20 px-4 bg-geometric relative overflow-hidden">
+      {/* Animated gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-green-600/5 via-transparent to-yellow-500/5 pointer-events-none" />
+      
+      {/* Floating accent shapes */}
+      <div className="absolute top-20 right-20 w-40 h-40 border-2 border-green-500/20 rounded-full animate-spin" style={{ animationDuration: '20s' }} />
+      <div className="absolute bottom-32 left-10 w-24 h-24 border-2 border-yellow-500/20 rounded-lg animate-spin" style={{ animationDuration: '15s', animationDirection: 'reverse' }} />
+      
+      <div className="max-w-7xl mx-auto relative z-10">
+        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+          <div className="bubble-morph blob-1" />
+          <div className="bubble-morph blob-2" />
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             The principles that guide everything we do
           </p>

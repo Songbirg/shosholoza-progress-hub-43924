@@ -1,5 +1,5 @@
 import Navigation from "@/components/Navigation";
-import Hero from "@/components/Hero";
+import HeroSlider from "@/components/HeroSlider";
 import Timeline from "@/components/Timeline";
 import Values from "@/components/Values";
 import Footer from "@/components/Footer";
@@ -8,8 +8,8 @@ const Index = () => {
   return (
     <div className="min-h-screen">
       <Navigation />
-      <main className="pt-16">
-        <Hero />
+      <main>
+        <HeroSlider />
         <Timeline />
         <Values />
       </main>

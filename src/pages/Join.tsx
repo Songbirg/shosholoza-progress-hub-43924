@@ -1316,6 +1316,7 @@ const Join = () => {
                                       <SelectItem value="City of Tshwane">
                                         City of Tshwane (Tshwane)
                                       </SelectItem>
+                                      <SelectItem value="Other">Other</SelectItem>
                                     </SelectContent>
                                   </Select>
                                   {errors.municipality && (

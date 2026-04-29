@@ -342,4 +342,228 @@ All colors MUST be HSL.
             animation: none;
         }
     }
+
+    /* ═══════════════════════════════════════════════════════════════════════════════
+       YOUTH-FRIENDLY ANIMATED BACKGROUNDS
+       ═══════════════════════════════════════════════════════════════════════════════ */
+
+    /* Animated gradient background - flowing colors */
+    .bg-animated-gradient {
+        background: linear-gradient(-45deg, #15803d, #166534, #14532d, #15803d, #ca8a04);
+        background-size: 400% 400%;
+        animation: gradient-flow 15s ease infinite;
+    }
+
+    @keyframes gradient-flow {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* Mesh gradient - modern colorful blend */
+    .bg-mesh-gradient {
+        background: 
+            radial-gradient(at 40% 20%, rgba(21, 128, 61, 0.3) 0px, transparent 50%),
+            radial-gradient(at 80% 0%, rgba(202, 138, 4, 0.2) 0px, transparent 50%),
+            radial-gradient(at 0% 50%, rgba(21, 128, 61, 0.25) 0px, transparent 50%),
+            radial-gradient(at 80% 50%, rgba(22, 101, 52, 0.2) 0px, transparent 50%),
+            radial-gradient(at 0% 100%, rgba(202, 138, 4, 0.15) 0px, transparent 50%),
+            linear-gradient(to bottom, #f8fafc, #f1f5f9);
+    }
+
+    /* Diagonal stripes with animation */
+    .bg-diagonal-stripes {
+        background: repeating-linear-gradient(
+            45deg,
+            rgba(21, 128, 61, 0.05),
+            rgba(21, 128, 61, 0.05) 10px,
+            rgba(202, 138, 4, 0.03) 10px,
+            rgba(202, 138, 4, 0.03) 20px
+        );
+    }
+
+    /* Geometric pattern background */
+    .bg-geometric {
+        background-color: #f8fafc;
+        background-image: 
+            linear-gradient(30deg, rgba(21, 128, 61, 0.03) 12%, transparent 12.5%, transparent 87%, rgba(21, 128, 61, 0.03) 87.5%, rgba(21, 128, 61, 0.03)),
+            linear-gradient(150deg, rgba(21, 128, 61, 0.03) 12%, transparent 12.5%, transparent 87%, rgba(21, 128, 61, 0.03) 87.5%, rgba(21, 128, 61, 0.03)),
+            linear-gradient(30deg, rgba(21, 128, 61, 0.03) 12%, transparent 12.5%, transparent 87%, rgba(21, 128, 61, 0.03) 87.5%, rgba(21, 128, 61, 0.03)),
+            linear-gradient(150deg, rgba(21, 128, 61, 0.03) 12%, transparent 12.5%, transparent 87%, rgba(21, 128, 61, 0.03) 87.5%, rgba(21, 128, 61, 0.03)),
+            linear-gradient(60deg, rgba(202, 138, 4, 0.04) 25%, transparent 25.5%, transparent 75%, rgba(202, 138, 4, 0.04) 75%, rgba(202, 138, 4, 0.04)),
+            linear-gradient(60deg, rgba(202, 138, 4, 0.04) 25%, transparent 25.5%, transparent 75%, rgba(202, 138, 4, 0.04) 75%, rgba(202, 138, 4, 0.04));
+        background-size: 80px 140px;
+        background-position: 0 0, 0 0, 40px 70px, 40px 70px, 0 0, 40px 70px;
+    }
+
+    /* Wave pattern background */
+    .bg-waves {
+        background-color: #f8fafc;
+        background-image: 
+            radial-gradient(circle at 100% 50%, rgba(21, 128, 61, 0.08) 0%, transparent 50%),
+            radial-gradient(circle at 0% 50%, rgba(202, 138, 4, 0.06) 0%, transparent 50%);
+        position: relative;
+    }
+
+    .bg-waves::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: 
+            linear-gradient(135deg, rgba(21, 128, 61, 0.05) 25%, transparent 25%),
+            linear-gradient(225deg, rgba(21, 128, 61, 0.05) 25%, transparent 25%),
+            linear-gradient(45deg, rgba(202, 138, 4, 0.03) 25%, transparent 25%),
+            linear-gradient(315deg, rgba(202, 138, 4, 0.03) 25%, transparent 25%);
+        background-size: 60px 60px;
+        background-position: 0 0, 30px 0, 30px -30px, 0px 30px;
+        opacity: 0.5;
+        pointer-events: none;
+    }
+
+    /* Dot pattern - modern tech feel */
+    .bg-dots {
+        background-color: #ffffff;
+        background-image: 
+            radial-gradient(rgba(21, 128, 61, 0.15) 1px, transparent 1px),
+            radial-gradient(rgba(202, 138, 4, 0.1) 1px, transparent 1px);
+        background-size: 30px 30px, 30px 30px;
+        background-position: 0 0, 15px 15px;
+    }
+
+    /* Floating shapes background */
+    .bg-floating-shapes {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .bg-floating-shapes::before,
+    .bg-floating-shapes::after {
+        content: '';
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(80px);
+        opacity: 0.3;
+        animation: float-shape 20s ease-in-out infinite;
+    }
+
+    .bg-floating-shapes::before {
+        width: 400px;
+        height: 400px;
+        background: rgba(21, 128, 61, 0.4);
+        top: -100px;
+        right: -100px;
+        animation-delay: 0s;
+    }
+
+    .bg-floating-shapes::after {
+        width: 350px;
+        height: 350px;
+        background: rgba(202, 138, 4, 0.3);
+        bottom: -100px;
+        left: -100px;
+        animation-delay: -10s;
+    }
+
+    @keyframes float-shape {
+        0%, 100% {
+            transform: translate(0, 0) scale(1);
+        }
+        25% {
+            transform: translate(30px, -30px) scale(1.05);
+        }
+        50% {
+            transform: translate(60px, 0) scale(0.95);
+        }
+        75% {
+            transform: translate(30px, 30px) scale(1.02);
+        }
+    }
+
+    /* Gradient rings - eye catching */
+    .bg-gradient-rings {
+        background: 
+            radial-gradient(circle at 20% 80%, rgba(21, 128, 61, 0.08) 0%, transparent 40%),
+            radial-gradient(circle at 80% 20%, rgba(202, 138, 4, 0.08) 0%, transparent 40%),
+            radial-gradient(circle at 50% 50%, rgba(21, 128, 61, 0.05) 0%, transparent 60%),
+            linear-gradient(to bottom, #f8fafc, #f1f5f9);
+    }
+
+    /* Rainbow gradient - very youth friendly */
+    .bg-rainbow-subtle {
+        background: 
+            linear-gradient(125deg, 
+                rgba(21, 128, 61, 0.08) 0%, 
+                rgba(22, 163, 74, 0.06) 25%,
+                rgba(202, 138, 4, 0.08) 50%,
+                rgba(234, 179, 8, 0.06) 75%,
+                rgba(21, 128, 61, 0.08) 100%
+            ),
+            #f8fafc;
+    }
+
+    /* Noise texture overlay for grit */
+    .bg-noise {
+        position: relative;
+    }
+
+    .bg-noise::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        opacity: 0.03;
+        pointer-events: none;
+    }
+
+    /* Pulse animation for highlights */
+    .bg-pulse-green {
+        background: linear-gradient(135deg, rgba(21, 128, 61, 0.1) 0%, rgba(22, 163, 74, 0.05) 100%);
+        position: relative;
+    }
+
+    .bg-pulse-green::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle, rgba(21, 128, 61, 0.1) 0%, transparent 70%);
+        animation: pulse-ring 4s ease-out infinite;
+        pointer-events: none;
+    }
+
+    @keyframes pulse-ring {
+        0% {
+            transform: translate(-50%, -50%) scale(0.8);
+            opacity: 0.5;
+        }
+        50% {
+            transform: translate(-50%, -50%) scale(1.2);
+            opacity: 0.2;
+        }
+        100% {
+            transform: translate(-50%, -50%) scale(0.8);
+            opacity: 0.5;
+        }
+    }
+
+    /* Dark section backgrounds */
+    .bg-dark-gradient {
+        background: linear-gradient(135deg, #14532d 0%, #166534 50%, #15803d 100%);
+    }
+
+    .bg-dark-waves {
+        background: 
+            linear-gradient(135deg, rgba(20, 83, 45, 0.95) 0%, rgba(22, 101, 52, 0.95) 100%),
+            url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
 }
