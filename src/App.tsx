@@ -16,6 +16,9 @@ import ViralShare from "./pages/ViralShare";
 import AdminApplications from "./pages/AdminApplications";
 import AdminCouncillors from "./pages/AdminCouncillors";
 import Councillor from "./pages/Councillor";
+import Blog from "./pages/Blog";
+import BlogDetail from "./pages/BlogDetail";
+import BlogAdmin from "./pages/BlogAdmin";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +43,9 @@ const App = () => (
             <Route path="/values" element={<ValuesPage />} />
             <Route path="/candidate" element={<Join />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:id" element={<BlogDetail />} />
+            <Route path="/admin/blog" element={<BlogAdmin />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
