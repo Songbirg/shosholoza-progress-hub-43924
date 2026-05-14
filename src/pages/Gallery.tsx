@@ -25,14 +25,12 @@ import video4 from "../../images/Videos/WhatsApp Video 2026-05-13 at 10.22.46 AM
 import song1 from "../../images/Songs/AI-Song_Shosholoza, Shosh!_v1_2026-04-07.mp3";
 import song2 from "../../images/Songs/AI-Song_Shosholoza, Sisindise Manje_v1_2026-04-07.mp3";
 import song3 from "../../images/Songs/AI-Song_Shosholoza, Sisindise Manje_v1_2026-04-07 (1).mp3";
-import song4 from "../../images/Songs/AI-Song_Siyayithath' iMzansi_v1_2026-04-07.mp3";
-import song5 from "../../images/Songs/AI-Song_Siyayithath' iMzansi_v1_2026-04-07 (1).mp3";
-import song6 from "../../images/Songs/AI-Song_Ubuntu Ngumuntu Ngabantu_v1_2026-04-07.mp3";
-import song7 from "../../images/Songs/AI-Song_Viva Shosholoza_v1_2026-04-07.mp3";
-import song8 from "../../images/Songs/AI-Song_Viva Shosholoza_v1_2026-04-07 (1).mp3";
-import song9 from "../../images/Songs/IShosholoza Ngeyethu_2026-04-06.mp3";
-import song10 from "../../images/Songs/Shhh Shosholoza Progressive Party_v1_2026-04-07.mp3";
-import song11 from "../../images/Songs/Talk Less, Do More_v1_2026-04-07.mp3";
+import song4 from "../../images/Songs/AI-Song_Ubuntu Ngumuntu Ngabantu_v1_2026-04-07.mp3";
+import song5 from "../../images/Songs/AI-Song_Viva Shosholoza_v1_2026-04-07.mp3";
+import song6 from "../../images/Songs/AI-Song_Viva Shosholoza_v1_2026-04-07 (1).mp3";
+import song7 from "../../images/Songs/IShosholoza Ngeyethu_2026-04-06.mp3";
+import song8 from "../../images/Songs/Shhh Shosholoza Progressive Party_v1_2026-04-07.mp3";
+import song9 from "../../images/Songs/Talk Less, Do More_v1_2026-04-07.mp3";
 
 const images = [
   { id: 1, src: img1, title: "Campaign Moment 1" },
@@ -56,14 +54,12 @@ const songs = [
   { id: 1, src: song1, title: "Shosholoza, Shosh!" },
   { id: 2, src: song2, title: "Sisindise Manje" },
   { id: 3, src: song3, title: "Sisindise Manje (Remix)" },
-  { id: 4, src: song4, title: "Siyayithath' iMzansi" },
-  { id: 5, src: song5, title: "Siyayithath' iMzansi (Remix)" },
-  { id: 6, src: song6, title: "Ubuntu Ngumuntu Ngabantu" },
-  { id: 7, src: song7, title: "Viva Shosholoza" },
-  { id: 8, src: song8, title: "Viva Shosholoza (Remix)" },
-  { id: 9, src: song9, title: "IShosholoza Ngeyethu" },
-  { id: 10, src: song10, title: "Shhh Shosholoza Progressive Party" },
-  { id: 11, src: song11, title: "Talk Less, Do More" },
+  { id: 4, src: song4, title: "Ubuntu Ngumuntu Ngabantu" },
+  { id: 5, src: song5, title: "Viva Shosholoza" },
+  { id: 6, src: song6, title: "Viva Shosholoza (Remix)" },
+  { id: 7, src: song7, title: "IShosholoza Ngeyethu" },
+  { id: 8, src: song8, title: "Shhh Shosholoza Progressive Party" },
+  { id: 9, src: song9, title: "Talk Less, Do More" },
 ];
 
 const Gallery = () => {
