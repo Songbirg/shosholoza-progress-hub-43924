@@ -19,6 +19,7 @@ import Councillor from "./pages/Councillor";
 import Blog from "./pages/Blog";
 import BlogDetail from "./pages/BlogDetail";
 import BlogAdmin from "./pages/BlogAdmin";
+import Gallery from "./pages/Gallery";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ const App = () => (
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:id" element={<BlogDetail />} />
             <Route path="/admin/blog" element={<BlogAdmin />} />
+            <Route path="/gallery" element={<Gallery />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

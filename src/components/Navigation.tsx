@@ -12,6 +12,7 @@ const Navigation = () => {
   const navItems = [
     { name: "Home", path: "/home" },
     { name: "Shosh News", path: "/blog" },
+    { name: "Gallery", path: "/gallery" },
     { name: "About", path: "/about" },
     { name: "Our Founder", path: "/founder" },
     { name: "Values", path: "/values" },
