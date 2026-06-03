@@ -1,12 +1,27 @@
 import { Link } from "react-router-dom";
 import { useBlog } from "@/hooks/useBlog";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { useRef } from "react";
 import { Calendar, User, ArrowRight, Newspaper } from "lucide-react";
 import { Button } from "./ui/button";
 
 const BlogSection = () => {
   const { getRecentArticles } = useBlog();
   const recentArticles = getRecentArticles(4);
+
+  // Multi-level parallax
+  const sectionRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start end", "end start"],
+  });
+
+  // Each layer moves at a different speed
+  const layer1Y = useTransform(scrollYProgress, [0, 1], ["-15%", "15%"]);
+  const layer2Y = useTransform(scrollYProgress, [0, 1], ["-25%", "25%"]);
+  const layer3Y = useTransform(scrollYProgress, [0, 1], ["-8%", "8%"]);
+  const layer1X = useTransform(scrollYProgress, [0, 1], ["-5%", "5%"]);
+  const layer2X = useTransform(scrollYProgress, [0, 1], ["5%", "-5%"]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -30,12 +45,43 @@ const BlogSection = () => {
   };
 
   return (
-    <section className="py-20 bg-gradient-to-br from-green-50 via-white to-yellow-50 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-20 left-10 w-64 h-64 bg-green-200/30 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-20 right-10 w-80 h-80 bg-yellow-200/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-green-100/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+    <section
+      ref={sectionRef}
+      className="py-20 bg-gradient-to-br from-green-50 via-white to-yellow-50 relative overflow-hidden"
+    >
+      {/* Multi-Level Parallax Background Layers */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Layer 1 — slowest, large blobs */}
+        <motion.div
+          style={{ y: layer1Y, x: layer1X }}
+          className="absolute inset-0"
+        >
+          <div className="absolute top-10 left-[-5%] w-72 h-72 bg-green-300/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-[-10%] right-[-5%] w-96 h-96 bg-yellow-300/15 rounded-full blur-3xl" />
+        </motion.div>
+
+        {/* Layer 2 — faster, mid-size shapes */}
+        <motion.div
+          style={{ y: layer2Y, x: layer2X }}
+          className="absolute inset-0"
+        >
+          <div className="absolute top-1/3 right-[8%] w-56 h-56 bg-emerald-400/15 rounded-full blur-2xl" />
+          <div className="absolute bottom-1/4 left-[12%] w-48 h-48 bg-amber-400/15 rounded-full blur-2xl" />
+          <div className="absolute top-[60%] left-[40%] w-36 h-36 bg-green-200/20 rounded-full blur-xl" />
+        </motion.div>
+
+        {/* Layer 3 — subtle base pulse (original blobs kept for familiarity) */}
+        <motion.div style={{ y: layer3Y }} className="absolute inset-0">
+          <div className="absolute top-20 left-10 w-64 h-64 bg-green-200/30 rounded-full blur-3xl animate-pulse" />
+          <div
+            className="absolute bottom-20 right-10 w-80 h-80 bg-yellow-200/30 rounded-full blur-3xl animate-pulse"
+            style={{ animationDelay: "1s" }}
+          />
+          <div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-green-100/20 rounded-full blur-3xl animate-pulse"
+            style={{ animationDelay: "2s" }}
+          />
+        </motion.div>
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
@@ -49,13 +95,16 @@ const BlogSection = () => {
         >
           <div className="inline-flex items-center gap-2 mb-4">
             <Newspaper className="w-8 h-8 text-green-600" />
-            <span className="text-green-600 font-semibold text-lg">SHOSH NEWS</span>
+            <span className="text-green-600 font-semibold text-lg">
+              SHOSH NEWS
+            </span>
           </div>
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
             Latest Updates
           </h2>
           <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-            Stay informed with the latest news, policies, and stories from the Shosholoza Progressive Party
+            Stay informed with the latest news, policies, and stories from the
+            Shosholoza Progressive Party
           </p>
         </motion.div>
 
@@ -98,7 +147,9 @@ const BlogSection = () => {
                       </div>
                       <div className="flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
-                        <span>{new Date(article.createdAt).toLocaleDateString()}</span>
+                        <span>
+                          {new Date(article.createdAt).toLocaleDateString()}
+                        </span>
                       </div>
                     </div>
 

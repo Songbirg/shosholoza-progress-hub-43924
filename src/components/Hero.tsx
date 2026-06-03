@@ -8,7 +8,9 @@ const Hero = () => {
   const { mx, my, scrollY, reducedMotion } = useParallax();
 
   const bgTranslateX = reducedMotion ? 0 : mx * 12;
-  const bgTranslateY = reducedMotion ? 0 : my * 10 - Math.min(scrollY * 0.03, 18);
+  const bgTranslateY = reducedMotion
+    ? 0
+    : my * 10 - Math.min(scrollY * 0.03, 18);
   const contentTranslateX = reducedMotion ? 0 : mx * 6;
   const contentTranslateY = reducedMotion ? 0 : my * 4;
 
@@ -19,8 +21,8 @@ const Hero = () => {
         className="absolute inset-0 z-0 hero-bg-image"
         style={{
           backgroundImage: `url(${heroBg})`,
-          transform: `translate3d(${bgTranslateX}px, ${bgTranslateY}px, 0) scale(1.06)` ,
-          willChange: reducedMotion ? undefined : ("transform" as any),
+          transform: `translate3d(${bgTranslateX}px, ${bgTranslateY}px, 0) scale(1.06)`,
+          willChange: reducedMotion ? undefined : "transform",
         }}
       />
 
@@ -38,7 +40,7 @@ const Hero = () => {
           className="max-w-3xl mx-auto text-center"
           style={{
             transform: `translate3d(${contentTranslateX}px, ${contentTranslateY}px, 0)`,
-            willChange: reducedMotion ? undefined : ("transform" as any),
+            willChange: reducedMotion ? undefined : "transform",
           }}
         >
           <h1

@@ -1,17 +1,20 @@
 import { Calendar, Flag, Users, Award } from "lucide-react";
+import { motion } from "framer-motion";
 import RevealOnScroll from "@/components/RevealOnScroll";
 
 const timelineEvents = [
   {
     year: "2015",
     title: "Party Founded",
-    description: "Shosholoza Progressive Party launched with a vision for social democracy",
+    description:
+      "Shosholoza Progressive Party launched with a vision for social democracy",
     icon: Flag,
   },
   {
     year: "2015",
     title: "IEC Registration",
-    description: "Official registration with the Independent Electoral Commission",
+    description:
+      "Official registration with the Independent Electoral Commission",
     icon: Award,
   },
   {
@@ -30,19 +33,29 @@ const timelineEvents = [
 
 const Timeline = () => {
   return (
-    <section id="journey" className="py-20 px-4 bg-mesh-gradient relative overflow-hidden">
+    <section
+      id="journey"
+      className="py-20 px-4 bg-mesh-gradient relative overflow-hidden"
+    >
       {/* Floating decorative elements */}
       <div className="absolute top-10 left-10 w-32 h-32 bg-green-500/10 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-10 right-10 w-40 h-40 bg-yellow-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-      <div className="absolute top-1/2 left-1/4 w-24 h-24 bg-green-600/5 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '2s' }} />
-      
+      <div
+        className="absolute bottom-10 right-10 w-40 h-40 bg-yellow-500/10 rounded-full blur-3xl animate-pulse"
+        style={{ animationDelay: "1s" }}
+      />
+      <div
+        className="absolute top-1/2 left-1/4 w-24 h-24 bg-green-600/5 rounded-full blur-2xl animate-pulse"
+        style={{ animationDelay: "2s" }}
+      />
+
       <div className="max-w-7xl mx-auto relative z-10">
         <RevealOnScroll>
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
               <h2 className="mb-4">Our Journey</h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                From founding to the future, our commitment to South Africa remains unwavering
+                From founding to the future, our commitment to South Africa
+                remains unwavering
               </p>
             </div>
           </div>
@@ -51,24 +64,60 @@ const Timeline = () => {
             <div className="grid md:grid-cols-2 gap-8">
               {timelineEvents.map((event, index) => {
                 const Icon = event.icon;
+                const fromLeft = index % 2 === 0;
                 return (
                   <div
                     key={index}
-                    className="relative bg-card p-6 rounded-lg shadow-elegant hover-lift animate-fade-in group cursor-pointer"
-                    style={{ animationDelay: `${index * 150}ms` }}
+                    className="relative overflow-hidden rounded-lg"
                   >
-                    <div className="flex items-start space-x-4">
-                      <div className="bg-primary text-primary-foreground p-3 rounded-lg shadow-elegant group-hover:shadow-glow transition-smooth group-hover:scale-110">
-                        <Icon size={24} />
-                      </div>
-                      <div className="flex-1">
-                        <div className="text-sm font-semibold text-muted-foreground mb-1">
-                          {event.year}
+                    {/* Sliding colour mask that reveals the card */}
+                    <motion.div
+                      className="absolute inset-0 z-10 rounded-lg"
+                      style={{
+                        background:
+                          index % 4 === 0
+                            ? "#16a34a"
+                            : index % 4 === 1
+                              ? "#eab308"
+                              : index % 4 === 2
+                                ? "#1e293b"
+                                : "#065f46",
+                        originX: fromLeft ? 0 : 1,
+                      }}
+                      initial={{ scaleX: 1 }}
+                      whileInView={{ scaleX: 0 }}
+                      viewport={{ once: true, amount: 0.4 }}
+                      transition={{
+                        duration: 0.65,
+                        delay: index * 0.12,
+                        ease: [0.77, 0, 0.18, 1],
+                      }}
+                    />
+                    {/* Actual card */}
+                    <motion.div
+                      className="relative bg-card p-6 rounded-lg shadow-elegant hover-lift group cursor-pointer"
+                      initial={{ opacity: 0 }}
+                      whileInView={{ opacity: 1 }}
+                      viewport={{ once: true, amount: 0.4 }}
+                      transition={{ duration: 0.01, delay: index * 0.12 + 0.3 }}
+                    >
+                      <div className="flex items-start space-x-4">
+                        <div className="bg-primary text-primary-foreground p-3 rounded-lg shadow-elegant group-hover:shadow-glow transition-smooth group-hover:scale-110">
+                          <Icon size={24} />
                         </div>
-                        <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-smooth">{event.title}</h3>
-                        <p className="text-muted-foreground">{event.description}</p>
+                        <div className="flex-1">
+                          <div className="text-sm font-semibold text-muted-foreground mb-1">
+                            {event.year}
+                          </div>
+                          <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-smooth">
+                            {event.title}
+                          </h3>
+                          <p className="text-muted-foreground">
+                            {event.description}
+                          </p>
+                        </div>
                       </div>
-                    </div>
+                    </motion.div>
                   </div>
                 );
               })}

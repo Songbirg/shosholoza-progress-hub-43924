@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, FileText } from "lucide-react";
+import { Menu, X, FileText, FileCheck } from "lucide-react";
 import { Button } from "./ui/button";
 import shoshLogo from "@/assets/shosh-logo.png";
 import manifestoPdf from "../../images/Manifesto 2026 .pdf";
+import pressStatementPdf from "../../images/shosh_press_conference_statement-v3.pdf";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -51,15 +52,26 @@ const Navigation = () => {
                 ></span>
               </Link>
             ))}
-            <a 
-              href={manifestoPdf} 
-              target="_blank" 
+            <a
+              href={manifestoPdf}
+              target="_blank"
               rel="noopener noreferrer"
               className="hover-scale inline-block"
             >
               <Button variant="outline" size="sm" className="flex items-center gap-2">
                 <FileText className="w-4 h-4" />
                 Manifesto
+              </Button>
+            </a>
+            <a
+              href={pressStatementPdf}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover-scale inline-block"
+            >
+              <Button variant="outline" size="sm" className="flex items-center gap-2">
+                <FileCheck className="w-4 h-4" />
+                Press Statement
               </Button>
             </a>
             <Link to="/candidate" className="hover-scale inline-block">
@@ -96,15 +108,26 @@ const Navigation = () => {
                 {item.name}
               </Link>
             ))}
-            <a 
-              href={manifestoPdf} 
-              target="_blank" 
+            <a
+              href={manifestoPdf}
+              target="_blank"
               rel="noopener noreferrer"
               onClick={() => setIsOpen(false)}
             >
               <Button variant="outline" size="sm" className="w-full mt-4 flex items-center justify-center gap-2">
                 <FileText className="w-4 h-4" />
                 Download Manifesto
+              </Button>
+            </a>
+            <a
+              href={pressStatementPdf}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setIsOpen(false)}
+            >
+              <Button variant="outline" size="sm" className="w-full mt-2 flex items-center justify-center gap-2">
+                <FileCheck className="w-4 h-4" />
+                Press Statement
               </Button>
             </a>
             <Link to="/candidate" onClick={() => setIsOpen(false)}>

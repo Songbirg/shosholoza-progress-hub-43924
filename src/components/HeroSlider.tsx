@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Zap, GraduationCap, Shield, Users, Building2 } from "lucide-react";
 import ParticleWave from "@/components/ParticleWave";
+import FluidCanvas from "@/components/FluidCanvas";
 
 // Import slide images from the images folder (relative path from src/components)
 import slide1 from "../../images/ultra-realistic_textures_and_202604091129.png";
@@ -33,7 +34,8 @@ const slides: Slide[] = [
     image: slide1,
     title: "Quality Service Delivery",
     subtitle: "Point 1 - Power to the People",
-    description: "Regional management offices for community-based service delivery. Outsourcing waste, potholes, electricity & water repairs to community cooperatives.",
+    description:
+      "Regional management offices for community-based service delivery. Outsourcing waste, potholes, electricity & water repairs to community cooperatives.",
     effect: "zoom",
     textPosition: "left",
     primaryButton: "Join SHOSH",
@@ -45,7 +47,8 @@ const slides: Slide[] = [
     image: slide2,
     title: "Job Creation & Skills",
     subtitle: "Point 2 - Opportunities for All",
-    description: "Job Centres in every community with free Wi-Fi, local job advertising, and youth training for real work opportunities.",
+    description:
+      "Job Centres in every community with free Wi-Fi, local job advertising, and youth training for real work opportunities.",
     effect: "fade",
     textPosition: "right",
     primaryButton: "Get Involved",
@@ -57,7 +60,8 @@ const slides: Slide[] = [
     image: slide3,
     title: "Zero Tolerance for Corruption",
     subtitle: "Point 3 - Transparency First",
-    description: "Dismantling municipal corruption networks. Prosecuting water tank mafias & tender cartels. Local Anti-Corruption Units with lifestyle audits.",
+    description:
+      "Dismantling municipal corruption networks. Prosecuting water tank mafias & tender cartels. Local Anti-Corruption Units with lifestyle audits.",
     effect: "slide",
     textPosition: "center",
     primaryButton: "Become a Member",
@@ -69,7 +73,8 @@ const slides: Slide[] = [
     image: slide4,
     title: "Safe & United Communities",
     subtitle: "Point 4 - Youth Brigades",
-    description: "National service-style Youth Brigades supporting community safety, fighting drugs & gangsterism. Instilling discipline, pride & purpose.",
+    description:
+      "National service-style Youth Brigades supporting community safety, fighting drugs & gangsterism. Instilling discipline, pride & purpose.",
     effect: "zoom",
     textPosition: "center",
     primaryButton: "Support Us",
@@ -81,7 +86,8 @@ const slides: Slide[] = [
     image: slide5,
     title: "Reclaim Our Cities",
     subtitle: "Point 5 - Restore Order",
-    description: "Cleaning cities, regulating trading, supporting local entrepreneurs, funding township mini-supermarkets. Clean, modern, dignified spaces for all.",
+    description:
+      "Cleaning cities, regulating trading, supporting local entrepreneurs, funding township mini-supermarkets. Clean, modern, dignified spaces for all.",
     effect: "fade",
     textPosition: "left",
     primaryButton: "Vote SHOSH",
@@ -193,6 +199,9 @@ const HeroSlider = () => {
       {/* Particle Wave Overlay */}
       <ParticleWave className="absolute inset-0 z-[5] w-full h-full opacity-40" />
 
+      {/* Fluid Dynamics — ink-in-water colour swirls, reacts to mouse */}
+      <FluidCanvas className="absolute inset-0 z-[6] w-full h-full opacity-55" />
+
       {/* Gradient Overlays */}
       <div className="absolute inset-0 z-10 bg-gradient-to-r from-black/70 via-black/50 to-black/70" />
       <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-black/20 to-black/40" />
@@ -209,8 +218,8 @@ const HeroSlider = () => {
               slide.textPosition === "center"
                 ? "mx-auto text-center"
                 : slide.textPosition === "left"
-                ? "mr-auto text-left"
-                : "ml-auto text-right"
+                  ? "mr-auto text-left"
+                  : "ml-auto text-right"
             }`}
             variants={textVariants[slide.textPosition]}
             initial="initial"
@@ -258,17 +267,15 @@ const HeroSlider = () => {
                 slide.textPosition === "center"
                   ? "justify-center"
                   : slide.textPosition === "right"
-                  ? "justify-end"
-                  : "justify-start"
+                    ? "justify-end"
+                    : "justify-start"
               }`}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.7, duration: 0.8 }}
             >
               <Link
-                to={
-                  slide.id === 2 ? "/candidate" : "/candidate"
-                }
+                to={slide.id === 2 ? "/candidate" : "/candidate"}
                 className="hover:scale-105 transition-transform inline-block"
               >
                 <Button
