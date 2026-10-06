@@ -1,0 +1,64 @@
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import AnimatedBackground from "@/components/AnimatedBackground";
+import WhatsAppFloatingButton from "@/components/WhatsAppFloatingButton";
+import CustomCursor from "@/components/CustomCursor";
+import Index from "./pages/Index";
+import About from "./pages/About";
+import Founder from "./pages/Founder";
+import ValuesPage from "./pages/ValuesPage";
+import Join from "./pages/Join";
+import Contact from "./pages/Contact";
+import NotFound from "./pages/NotFound";
+import ViralShare from "./pages/ViralShare";
+import AdminApplications from "./pages/AdminApplications";
+import AdminCouncillors from "./pages/AdminCouncillors";
+import Councillor from "./pages/Councillor";
+import Blog from "./pages/Blog";
+import BlogDetail from "./pages/BlogDetail";
+import BlogAdmin from "./pages/BlogAdmin";
+import Gallery from "./pages/Gallery";
+import HousingRegister from "./pages/HousingRegister";
+
+const queryClient = new QueryClient();
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <AnimatedBackground />
+      <WhatsAppFloatingButton />
+      <CustomCursor />
+      <div className="relative z-10">
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/home" element={<Index />} />
+            <Route path="/share" element={<ViralShare />} />
+            <Route path="/admin/applications" element={<AdminApplications />} />
+            <Route path="/admin/councillors" element={<AdminCouncillors />} />
+            <Route path="/councillor" element={<Councillor />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/founder" element={<Founder />} />
+            <Route path="/values" element={<ValuesPage />} />
+            <Route path="/candidate" element={<Join />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:id" element={<BlogDetail />} />
+            <Route path="/admin/blog" element={<BlogAdmin />} />
+            <Route path="/gallery" element={<Gallery />} />
+            <Route path="/housing" element={<HousingRegister />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </div>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
+
+export default App;
