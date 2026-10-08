@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import WhatsAppFloatingButton from "@/components/WhatsAppFloatingButton";
 import CustomCursor from "@/components/CustomCursor";
+import UrgentVotingBanner from "@/components/UrgentVotingBanner";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import Founder from "./pages/Founder";
@@ -30,6 +31,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <UrgentVotingBanner />
       <AnimatedBackground />
       <WhatsAppFloatingButton />
       <CustomCursor />
