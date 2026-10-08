@@ -9,9 +9,9 @@ const CustomCursor = () => {
   const mouseX = useMotionValue(-200);
   const mouseY = useMotionValue(-200);
 
-  // Ring follows with spring lag - increased speed for better responsiveness
-  const ringX = useSpring(mouseX, { stiffness: 300, damping: 30, mass: 0.3 });
-  const ringY = useSpring(mouseY, { stiffness: 300, damping: 30, mass: 0.3 });
+  // Ring follows with spring lag - much faster for immediate responsiveness
+  const ringX = useSpring(mouseX, { stiffness: 600, damping: 20, mass: 0.1 });
+  const ringY = useSpring(mouseY, { stiffness: 600, damping: 20, mass: 0.1 });
 
   useEffect(() => {
     // Don't activate on touch devices
