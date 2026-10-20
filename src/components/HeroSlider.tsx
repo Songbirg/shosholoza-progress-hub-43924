@@ -4,8 +4,6 @@ import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Zap, GraduationCap, Shield, Users, Building2 } from "lucide-react";
-import ParticleWave from "@/components/ParticleWave";
-import FluidCanvas from "@/components/FluidCanvas";
 
 // Import slide images from the images folder (relative path from src/components)
 import slide1 from "../../images/ultra-realistic_textures_and_202604091129.png";
@@ -125,36 +123,24 @@ const HeroSlider = () => {
 
   const slide = slides[currentSlide];
 
-  // Animation variants based on effect type
+  // Animation variants - simplified
   const imageVariants = {
-    zoom: {
-      initial: { scale: 1.2, opacity: 0 },
-      animate: { scale: 1, opacity: 1 },
-      exit: { scale: 1.1, opacity: 0 },
-    },
-    slide: {
-      initial: { x: direction > 0 ? "100%" : "-100%", opacity: 0 },
-      animate: { x: 0, opacity: 1 },
-      exit: { x: direction > 0 ? "-100%" : "100%", opacity: 0 },
-    },
-    fade: {
-      initial: { opacity: 0 },
-      animate: { opacity: 1 },
-      exit: { opacity: 0 },
-    },
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 },
   };
 
   const textVariants = {
     left: {
-      initial: { x: -100, opacity: 0 },
+      initial: { x: -50, opacity: 0 },
       animate: { x: 0, opacity: 1 },
     },
     right: {
-      initial: { x: 100, opacity: 0 },
+      initial: { x: 50, opacity: 0 },
       animate: { x: 0, opacity: 1 },
     },
     center: {
-      initial: { y: 50, opacity: 0 },
+      initial: { y: 30, opacity: 0 },
       animate: { y: 0, opacity: 1 },
     },
   };
@@ -170,11 +156,11 @@ const HeroSlider = () => {
         <motion.div
           key={slide.id}
           className="absolute inset-0 z-0"
-          variants={imageVariants[slide.effect]}
+          variants={imageVariants}
           initial="initial"
           animate="animate"
           exit="exit"
-          transition={{ duration: 1.2, ease: [0.4, 0, 0.2, 1] }}
+          transition={{ duration: 0.5 }}
         >
           <div
             className="absolute inset-0 bg-cover bg-center"
@@ -182,25 +168,8 @@ const HeroSlider = () => {
               backgroundImage: `url(${slide.image})`,
             }}
           />
-          {/* Ken Burns effect for zoom slides */}
-          {slide.effect === "zoom" && (
-            <motion.div
-              className="absolute inset-0 bg-cover bg-center"
-              style={{
-                backgroundImage: `url(${slide.image})`,
-              }}
-              animate={{ scale: [1, 1.1] }}
-              transition={{ duration: 8, ease: "linear" }}
-            />
-          )}
         </motion.div>
       </AnimatePresence>
-
-      {/* Particle Wave Overlay */}
-      <ParticleWave className="absolute inset-0 z-[5] w-full h-full opacity-40" />
-
-      {/* Fluid Dynamics — ink-in-water colour swirls, reacts to mouse */}
-      <FluidCanvas className="absolute inset-0 z-[6] w-full h-full opacity-55" />
 
       {/* Gradient Overlays */}
       <div className="absolute inset-0 z-10 bg-gradient-to-r from-black/70 via-black/50 to-black/70" />

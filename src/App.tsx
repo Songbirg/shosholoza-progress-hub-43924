@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import WhatsAppFloatingButton from "@/components/WhatsAppFloatingButton";
-import CustomCursor from "@/components/CustomCursor";
 import UrgentVotingBanner from "@/components/UrgentVotingBanner";
 import Index from "./pages/Index";
 import About from "./pages/About";
@@ -34,7 +33,6 @@ const App = () => (
       <UrgentVotingBanner />
       <AnimatedBackground />
       <WhatsAppFloatingButton />
-      <CustomCursor />
       <div className="relative z-10">
         <BrowserRouter>
           <Routes>

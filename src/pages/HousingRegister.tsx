@@ -24,22 +24,22 @@ const HousingRegister = () => {
     category: "rdp", // "rdp" or "rental"
   });
 
-  // Housing development slides - Professional high-rise images
+  // Housing development slides - Modern low-cost apartments
   const slides = [
     {
-      title: "Modern High-Rise Living",
-      description: "State-of-the-art apartment blocks for all Johannesburg residents",
-      image: "/images/Campaign images/Make_this_image_high_quality_202605131039.jpeg",
+      title: "Affordable High-Rise Living",
+      description: "Quality apartments for all Johannesburg residents",
+      image: "/images/apartment1.jpg",
     },
     {
-      title: "Quality Family Housing",
-      description: "Comfortable homes with modern amenities and infrastructure",
-      image: "/images/Campaign images/Make_this_image_high_quality_202605131039 (1).jpeg",
+      title: "Modern Family Housing",
+      description: "Comfortable homes with essential amenities",
+      image: "/images/apartment2.jpg",
     },
     {
       title: "Integrated Communities",
-      description: "High-rise developments from South to North, East to West",
-      image: "/images/Campaign images/Make_this_image_high_quality_202605131039 (2).jpeg",
+      description: "Housing developments from South to North, East to West",
+      image: "/images/apartment3.jpg",
     },
   ];
 
@@ -133,7 +133,7 @@ const HousingRegister = () => {
       <Navigation />
       
       {/* Professional Hero Section with Image Slider */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-green-900 to-emerald-950 min-h-[700px] md:min-h-[800px]">
+      <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-green-900 to-emerald-950 min-h-[500px] md:min-h-[600px]">
         
         {/* Image Slider Background */}
         <AnimatePresence mode="wait">
@@ -206,7 +206,7 @@ const HousingRegister = () => {
         </div>
 
         {/* Content Overlay - Professional Layout */}
-        <div className="relative z-20 container mx-auto px-6 md:px-12 h-full min-h-[700px] md:min-h-[800px] flex flex-col justify-center">
+        <div className="relative z-20 container mx-auto px-6 md:px-12 h-full min-h-[500px] md:min-h-[600px] flex flex-col justify-center">
           <div className="max-w-4xl">
             
             {/* Icon */}
@@ -226,7 +226,7 @@ const HousingRegister = () => {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.3 }}
-              className="text-5xl md:text-7xl lg:text-8xl font-black text-white mb-6 leading-tight tracking-tight"
+              className="text-4xl md:text-6xl lg:text-7xl font-black text-white mb-6 leading-tight tracking-tight"
             >
               Register for Housing
             </motion.h1>
@@ -239,12 +239,12 @@ const HousingRegister = () => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 30 }}
                 transition={{ duration: 0.6 }}
-                className="mb-10"
+                className="mb-8"
               >
-                <h2 className="text-2xl md:text-4xl font-bold text-yellow-400 mb-3">
+                <h2 className="text-xl md:text-3xl font-bold text-yellow-400 mb-3">
                   {slides[currentSlide].title}
                 </h2>
-                <p className="text-xl md:text-2xl text-gray-200 font-light">
+                <p className="text-lg md:text-xl text-gray-200 font-light">
                   {slides[currentSlide].description}
                 </p>
               </motion.div>
@@ -255,25 +255,25 @@ const HousingRegister = () => {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.5 }}
-              className="max-w-3xl bg-white/10 backdrop-blur-xl rounded-2xl p-8 md:p-10 border border-white/20 shadow-2xl"
+              className="max-w-3xl bg-white/10 backdrop-blur-xl rounded-2xl p-6 md:p-8 border border-white/20 shadow-2xl"
             >
-              <div className="space-y-5">
-                <p className="text-2xl md:text-3xl font-bold text-yellow-300 leading-relaxed">
-                  "Modern High-Rise Apartments for All Johannesburg Residents"
+              <div className="space-y-4">
+                <p className="text-xl md:text-2xl font-bold text-yellow-300 leading-relaxed">
+                  "Modern Low-Cost Apartments for All Johannesburg Residents"
                 </p>
                 
                 <div className="h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
                 
-                <p className="text-lg md:text-xl text-gray-100 font-medium leading-relaxed">
+                <p className="text-base md:text-lg text-gray-100 font-medium leading-relaxed">
                   When Shosholoza wins, registered members will be PRIORITISED for quality housing
                 </p>
                 
-                <p className="text-base md:text-lg text-gray-200">
+                <p className="text-sm md:text-base text-gray-200">
                   Register now and secure your place on our priority list
                 </p>
                 
-                <div className="pt-4">
-                  <p className="text-2xl md:text-3xl font-black text-transparent bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 bg-clip-text inline-block">
+                <div className="pt-2">
+                  <p className="text-xl md:text-2xl font-black text-transparent bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 bg-clip-text inline-block">
                     Vote Shosh and see the Magic! ✨
                   </p>
                 </div>
@@ -285,7 +285,7 @@ const HousingRegister = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.7 }}
-              className="mt-10"
+              className="mt-6"
             >
               <button
                 onClick={() => {
@@ -293,14 +293,14 @@ const HousingRegister = () => {
                     behavior: 'smooth' 
                   });
                 }}
-                className="group inline-flex items-center gap-3 bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-slate-900 font-bold text-lg px-10 py-5 rounded-full shadow-2xl hover:shadow-yellow-400/50 transition-all duration-300 hover:scale-105"
+                className="group inline-flex items-center gap-3 bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-slate-900 font-bold text-base md:text-lg px-8 py-4 rounded-full shadow-2xl hover:shadow-yellow-400/50 transition-all duration-300 hover:scale-105"
               >
                 <span>Register Now - Get Priority</span>
                 <motion.div
                   animate={{ x: [0, 5, 0] }}
                   transition={{ duration: 1.5, repeat: Infinity }}
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
                 </motion.div>
