@@ -203,7 +203,7 @@ const HeroSlider = () => {
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent z-20" />
 
       {/* Content */}
-      <div className="container mx-auto px-4 h-full relative z-30 flex items-center">
+      <div className="container mx-auto px-4 h-full relative z-30 flex items-center pt-20">
         <AnimatePresence mode="wait">
           <motion.div
             key={slide.id}
