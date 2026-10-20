@@ -13,6 +13,8 @@ create table if not exists public.housing_applications (
   residential_address  text not null,
   email                text not null,
   telephone            text not null,
+  category             text not null default 'rdp'
+                         check (category in ('rdp', 'rental')),
   status               text not null default 'pending'
                          check (status in ('pending', 'approved', 'rejected', 'waiting_list'))
 );
