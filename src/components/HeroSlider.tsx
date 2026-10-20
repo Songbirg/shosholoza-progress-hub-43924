@@ -3,14 +3,12 @@ import { Button } from "./ui/button";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Zap, GraduationCap, Shield, Users, Building2 } from "lucide-react";
+import { Zap, GraduationCap, Shield } from "lucide-react";
 
-// Import slide images from the images folder (relative path from src/components)
-import slide1 from "../../images/ultra-realistic_textures_and_202604091129.png";
-import slide2 from "../../images/ultra-realistic_textures_and_202604091141.png";
-import slide3 from "../../images/ultra-realistic_textures_and_202604091147.png";
-import slide4 from "../../images/Ultra-realistic,_expansive_wide_202604211138.png";
-import slide5 from "../../images/Please_remove_the_icon_on_the_bottom_right__2k_delpmaspu.png";
+// Import slide images - using optimized hero images
+import slide1 from "../../images/hero1.jpg";
+import slide2 from "../../images/hero2.jpg";
+import slide3 from "../../images/hero3.jpg";
 
 interface Slide {
   id: number;
@@ -25,7 +23,7 @@ interface Slide {
   icon: React.ElementType;
 }
 
-// 5 Point Plan Slides - each slide represents one point of the plan
+// 3 Slide Hero - Faster loading with optimized images
 const slides: Slide[] = [
   {
     id: 1,
@@ -66,55 +64,12 @@ const slides: Slide[] = [
     secondaryButton: "Our Policies",
     icon: Shield,
   },
-  {
-    id: 4,
-    image: slide4,
-    title: "Safe & United Communities",
-    subtitle: "Point 4 - Youth Brigades",
-    description:
-      "National service-style Youth Brigades supporting community safety, fighting drugs & gangsterism. Instilling discipline, pride & purpose.",
-    effect: "zoom",
-    textPosition: "center",
-    primaryButton: "Support Us",
-    secondaryButton: "Read More",
-    icon: Users,
-  },
-  {
-    id: 5,
-    image: slide5,
-    title: "Reclaim Our Cities",
-    subtitle: "Point 5 - Restore Order",
-    description:
-      "Cleaning cities, regulating trading, supporting local entrepreneurs, funding township mini-supermarkets. Clean, modern, dignified spaces for all.",
-    effect: "fade",
-    textPosition: "left",
-    primaryButton: "Vote SHOSH",
-    secondaryButton: "Join Movement",
-    icon: Building2,
-  },
 ];
 
 const HeroSlider = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [direction, setDirection] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-  const [imagesLoaded, setImagesLoaded] = useState(false);
-
-  // Preload images
-  useEffect(() => {
-    const imagePromises = slides.map((slide) => {
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.src = slide.image;
-        img.onload = resolve;
-        img.onerror = reject;
-      });
-    });
-
-    Promise.all(imagePromises)
-      .then(() => setImagesLoaded(true))
-      .catch(() => setImagesLoaded(true)); // Load anyway on error
-  }, []);
 
   const nextSlide = useCallback(() => {
     setDirection(1);
@@ -133,10 +88,10 @@ const HeroSlider = () => {
 
   // Auto-play - faster interval
   useEffect(() => {
-    if (!isAutoPlaying || !imagesLoaded) return;
-    const timer = setInterval(nextSlide, 4000); // Reduced from 5000 to 4000
+    if (!isAutoPlaying) return;
+    const timer = setInterval(nextSlide, 3500); // Even faster
     return () => clearInterval(timer);
-  }, [isAutoPlaying, nextSlide, imagesLoaded]);
+  }, [isAutoPlaying, nextSlide]);
 
   const slide = slides[currentSlide];
 
@@ -164,16 +119,10 @@ const HeroSlider = () => {
 
   return (
     <section
-      className="relative h-screen max-h-[900px] min-h-[600px] overflow-hidden bg-slate-900"
+      className="relative h-auto max-h-[700px] min-h-[500px] overflow-hidden bg-slate-900"
       onMouseEnter={() => setIsAutoPlaying(false)}
       onMouseLeave={() => setIsAutoPlaying(true)}
     >
-      {!imagesLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-slate-900 z-50">
-          <div className="text-white text-xl">Loading...</div>
-        </div>
-      )}
-      
       {/* Background Slides */}
       <AnimatePresence mode="wait">
         <motion.div
