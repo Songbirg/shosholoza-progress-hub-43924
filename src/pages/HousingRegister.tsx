@@ -209,18 +209,6 @@ const HousingRegister = () => {
         <div className="relative z-20 container mx-auto px-6 md:px-12 h-full min-h-[500px] md:min-h-[600px] flex flex-col justify-center">
           <div className="max-w-4xl">
             
-            {/* Icon */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="mb-8"
-            >
-              <div className="inline-flex items-center justify-center w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 shadow-2xl">
-                <Home className="w-10 h-10 md:w-12 md:h-12 text-white" strokeWidth={2} />
-              </div>
-            </motion.div>
-
             {/* Main Heading */}
             <motion.h1
               initial={{ opacity: 0, y: 30 }}
