@@ -98,6 +98,23 @@ const HeroSlider = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [direction, setDirection] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
+
+  // Preload images
+  useEffect(() => {
+    const imagePromises = slides.map((slide) => {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.src = slide.image;
+        img.onload = resolve;
+        img.onerror = reject;
+      });
+    });
+
+    Promise.all(imagePromises)
+      .then(() => setImagesLoaded(true))
+      .catch(() => setImagesLoaded(true)); // Load anyway on error
+  }, []);
 
   const nextSlide = useCallback(() => {
     setDirection(1);
@@ -114,12 +131,12 @@ const HeroSlider = () => {
     setCurrentSlide(index);
   };
 
-  // Auto-play
+  // Auto-play - faster interval
   useEffect(() => {
-    if (!isAutoPlaying) return;
-    const timer = setInterval(nextSlide, 5000);
+    if (!isAutoPlaying || !imagesLoaded) return;
+    const timer = setInterval(nextSlide, 4000); // Reduced from 5000 to 4000
     return () => clearInterval(timer);
-  }, [isAutoPlaying, nextSlide]);
+  }, [isAutoPlaying, nextSlide, imagesLoaded]);
 
   const slide = slides[currentSlide];
 
@@ -147,10 +164,16 @@ const HeroSlider = () => {
 
   return (
     <section
-      className="relative h-screen max-h-[900px] min-h-[600px] overflow-hidden"
+      className="relative h-screen max-h-[900px] min-h-[600px] overflow-hidden bg-slate-900"
       onMouseEnter={() => setIsAutoPlaying(false)}
       onMouseLeave={() => setIsAutoPlaying(true)}
     >
+      {!imagesLoaded && (
+        <div className="absolute inset-0 flex items-center justify-center bg-slate-900 z-50">
+          <div className="text-white text-xl">Loading...</div>
+        </div>
+      )}
+      
       {/* Background Slides */}
       <AnimatePresence mode="wait">
         <motion.div
@@ -160,12 +183,13 @@ const HeroSlider = () => {
           initial="initial"
           animate="animate"
           exit="exit"
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.3 }} // Faster transition
         >
           <div
             className="absolute inset-0 bg-cover bg-center"
             style={{
               backgroundImage: `url(${slide.image})`,
+              imageRendering: 'auto',
             }}
           />
         </motion.div>
@@ -200,7 +224,7 @@ const HeroSlider = () => {
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 }}
+              transition={{ delay: 0.1, duration: 0.3 }}
               className="inline-block mb-4"
             >
               <span className="px-4 py-2 bg-yellow-500/90 text-green-900 font-bold text-sm rounded-full shadow-lg">
@@ -213,7 +237,7 @@ const HeroSlider = () => {
               className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 drop-shadow-2xl"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.8 }}
+              transition={{ delay: 0.15, duration: 0.4 }}
               style={{ textShadow: "0 4px 24px rgba(0,0,0,0.8)" }}
             >
               {slide.title}
@@ -224,7 +248,7 @@ const HeroSlider = () => {
               className="text-lg md:text-xl text-white/90 mb-10 max-w-2xl leading-relaxed drop-shadow-lg"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.8 }}
+              transition={{ delay: 0.2, duration: 0.4 }}
               style={{ textShadow: "0 2px 12px rgba(0,0,0,0.7)" }}
             >
               {slide.description}
@@ -241,7 +265,7 @@ const HeroSlider = () => {
               }`}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7, duration: 0.8 }}
+              transition={{ delay: 0.25, duration: 0.4 }}
             >
               <Link
                 to={slide.id === 2 ? "/candidate" : "/candidate"}
