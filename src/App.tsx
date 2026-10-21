@@ -22,6 +22,7 @@ import BlogDetail from "./pages/BlogDetail";
 import BlogAdmin from "./pages/BlogAdmin";
 import Gallery from "./pages/Gallery";
 import HousingRegister from "./pages/HousingRegister";
+import LuckyDraw from "./pages/LuckyDraw";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +53,7 @@ const App = () => (
             <Route path="/admin/blog" element={<BlogAdmin />} />
             <Route path="/gallery" element={<Gallery />} />
             <Route path="/housing" element={<HousingRegister />} />
+            <Route path="/lucky-draw" element={<LuckyDraw />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
