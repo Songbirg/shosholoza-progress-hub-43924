@@ -1,5 +1,6 @@
 import Navigation from "@/components/Navigation";
 import HeroSlider from "@/components/HeroSlider";
+import LuckyDrawPromo from "@/components/LuckyDrawPromo";
 import FivePointPlan from "@/components/FivePointPlan";
 import Timeline from "@/components/Timeline";
 import Values from "@/components/Values";
@@ -12,6 +13,7 @@ const Index = () => {
       <Navigation />
       <main className="pt-16">
         <HeroSlider />
+        <LuckyDrawPromo />
         <FivePointPlan />
         <Timeline />
         <Values />

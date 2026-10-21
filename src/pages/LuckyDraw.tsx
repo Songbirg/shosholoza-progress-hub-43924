@@ -211,28 +211,31 @@ const LuckyDraw = () => {
               transition={{ duration: 0.8, delay: 0.8 }}
               className="flex flex-col sm:flex-row gap-4 justify-center items-center"
             >
+              <Link to="/lucky-draw" scroll={false}>
+                <Button
+                  size="lg"
+                  className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-red-900 font-bold px-10 py-7 text-lg shadow-2xl"
+                  onClick={() => document.getElementById('entry-form')?.scrollIntoView({ behavior: 'smooth' })}
+                >
+                  ENTER THE DRAW
+                  <Gift className="ml-2 w-5 h-5" />
+                </Button>
+              </Link>
               <a
-                href="https://www.shosh.org.za"
+                href="https://shosh.org.za/candidate"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group"
               >
                 <Button
                   size="lg"
-                  className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-red-900 font-bold px-10 py-7 text-lg shadow-2xl"
+                  variant="outline"
+                  className="border-2 border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-red-900 px-10 py-7 text-lg font-bold"
                 >
-                  ENTER AT SHOSH
+                  BECOME A MEMBER
                   <ExternalLink className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </a>
-              <Button
-                size="lg"
-                variant="outline"
-                onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
-                className="border-2 border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-red-900 px-10 py-7 text-lg font-bold"
-              >
-                HOW IT WORKS
-              </Button>
             </motion.div>
 
             {/* Countdown Timer */}
@@ -297,7 +300,7 @@ const LuckyDraw = () => {
                 step: "STEP 1",
                 icon: Users,
                 title: "BE A SHOSH MEMBER",
-                description: "The promotion is intended for SHOSH members. Direct visitors to the official website to review eligibility requirements.",
+                description: "The promotion is intended for SHOSH members. Visit shosh.org.za/candidate to register as a member and review eligibility requirements.",
               },
               {
                 step: "STEP 2",
@@ -439,7 +442,7 @@ const LuckyDraw = () => {
       </section>
 
       {/* Entry Form Section */}
-      <section className="py-20 px-4 relative overflow-hidden">
+      <section id="entry-form" className="py-20 px-4 relative overflow-hidden">
         <div className="container mx-auto max-w-2xl">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -584,12 +587,15 @@ const LuckyDraw = () => {
             <h2 className="text-4xl md:text-5xl font-black text-white mb-6">
               READY TO JOIN THE EXCITEMENT?
             </h2>
-            <p className="text-xl text-white/90 mb-10">
-              Visit the official SHOSH website for promotion details.
+            <p className="text-xl text-white/90 mb-4">
+              Not a member yet?
+            </p>
+            <p className="text-lg text-white/80 mb-10">
+              Register as a SHOSH member to participate in the lucky draw.
             </p>
             
             <a
-              href="https://www.shosh.org.za"
+              href="https://shosh.org.za/candidate"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block group"
@@ -598,13 +604,13 @@ const LuckyDraw = () => {
                 size="lg"
                 className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-red-900 font-black px-12 py-8 text-xl shadow-2xl"
               >
-                VISIT WWW.SHOSH.ORG.ZA
+                BECOME A SHOSH MEMBER
                 <ExternalLink className="ml-3 w-6 h-6 group-hover:translate-x-1 transition-transform" />
               </Button>
             </a>
 
             <p className="text-white/70 text-sm mt-6">
-              Terms and Conditions apply.
+              Already a member? Scroll up to enter the lucky draw.
             </p>
           </motion.div>
         </div>
@@ -615,8 +621,8 @@ const LuckyDraw = () => {
         <div className="container mx-auto max-w-4xl">
           <p className="text-gray-400 text-sm leading-relaxed">
             <strong className="text-yellow-400">Disclaimer:</strong> Eligibility, participation rules, prize details, and the official terms and conditions must be confirmed on the official SHOSH website at{" "}
-            <a href="https://www.shosh.org.za" target="_blank" rel="noopener noreferrer" className="text-yellow-400 hover:underline">
-              www.shosh.org.za
+            <a href="https://shosh.org.za/candidate" target="_blank" rel="noopener noreferrer" className="text-yellow-400 hover:underline">
+              shosh.org.za/candidate
             </a>
             . This promotion page is for informational purposes only.
           </p>
