@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 
 const LuckyDraw = () => {
   const { toast } = useToast();
@@ -98,6 +99,12 @@ const LuckyDraw = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-red-950 to-slate-900">
+      <SEO
+        title="SHOSH Lucky Draw 2026 - Win Up To R100,000!"
+        description="Enter the SHOSH Lucky Draw 2026 for your chance to win up to R100,000! For SHOSH members only. Closing date: 4 November 2026. Draw date: 12 November 2026."
+        url="https://shosh.org.za/lucky-draw"
+        image="https://shosh.org.za/og-image.png"
+      />
       <Navigation />
       
       {/* Floating Confetti Background */}
