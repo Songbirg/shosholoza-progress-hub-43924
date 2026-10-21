@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Calendar, Gift, Users, CheckCircle, ExternalLink, Sparkles, Award, User, Mail, Phone, Hash } from "lucide-react";
 import { Button } from "@/components/ui/button";
