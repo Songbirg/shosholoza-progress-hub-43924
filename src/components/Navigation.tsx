@@ -14,7 +14,7 @@ const Navigation = () => {
     { name: "Home", path: "/home" },
     { name: "Shosh News", path: "/blog" },
     { name: "Gallery", path: "/gallery" },
-    { name: "Housing", path: "/housing" },
+    { name: "Lucky Draw", path: "/lucky-draw" },
     { name: "About", path: "/about" },
     { name: "Our Founder", path: "/founder" },
     { name: "Values", path: "/values" },

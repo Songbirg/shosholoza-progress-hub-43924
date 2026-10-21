@@ -23,6 +23,7 @@ import BlogAdmin from "./pages/BlogAdmin";
 import Gallery from "./pages/Gallery";
 import HousingRegister from "./pages/HousingRegister";
 import LuckyDraw from "./pages/LuckyDraw";
+import AdminLuckyDraw from "./pages/AdminLuckyDraw";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/share" element={<ViralShare />} />
             <Route path="/admin/applications" element={<AdminApplications />} />
             <Route path="/admin/councillors" element={<AdminCouncillors />} />
+            <Route path="/admin/lucky-draw" element={<AdminLuckyDraw />} />
             <Route path="/councillor" element={<Councillor />} />
             <Route path="/about" element={<About />} />
             <Route path="/founder" element={<Founder />} />

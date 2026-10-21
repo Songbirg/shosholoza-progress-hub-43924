@@ -1,16 +1,28 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Calendar, Gift, Users, CheckCircle, ExternalLink, Sparkles, Award } from "lucide-react";
+import { Calendar, Gift, Users, CheckCircle, ExternalLink, Sparkles, Award, User, Mail, Phone, Hash } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 
 const LuckyDraw = () => {
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
     minutes: 0,
     seconds: 0,
+  });
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    membershipId: "",
   });
 
   // Countdown to closing date: 4 November 2026
@@ -38,6 +50,51 @@ const LuckyDraw = () => {
   }, []);
 
   const isPromotionClosed = timeLeft.days === 0 && timeLeft.hours === 0 && timeLeft.minutes === 0 && timeLeft.seconds === 0;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.from("lucky_draw_entries").insert([
+        {
+          full_name: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          membership_id: formData.membershipId,
+        },
+      ]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Entry Submitted!",
+        description: "Your lucky draw entry has been registered successfully.",
+      });
+
+      setFormData({
+        fullName: "",
+        email: "",
+        phone: "",
+        membershipId: "",
+      });
+    } catch (error) {
+      toast({
+        title: "Submission Failed",
+        description: "Please try again or contact support.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-red-950 to-slate-900">
@@ -378,6 +435,138 @@ const LuckyDraw = () => {
 
           {/* Timeline Connector */}
           <div className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 w-px h-8 bg-yellow-400" />
+        </div>
+      </section>
+
+      {/* Entry Form Section */}
+      <section className="py-20 px-4 relative overflow-hidden">
+        <div className="container mx-auto max-w-2xl">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
+              ENTER THE DRAW
+            </h2>
+            <p className="text-xl text-gray-300">
+              Complete your entry for the SHOSH Lucky Draw 2026
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            viewport={{ once: true }}
+            className="bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-xl rounded-2xl p-8 md:p-12 border-2 border-yellow-400 shadow-2xl"
+          >
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Full Name */}
+              <div className="space-y-2">
+                <Label htmlFor="fullName" className="text-lg font-semibold text-white flex items-center gap-2">
+                  <User className="w-5 h-5 text-yellow-400" />
+                  Full Name *
+                </Label>
+                <Input
+                  id="fullName"
+                  name="fullName"
+                  type="text"
+                  placeholder="Enter your full name"
+                  value={formData.fullName}
+                  onChange={handleChange}
+                  required
+                  className="h-12 text-lg bg-white/10 border-yellow-400/30 text-white placeholder:text-gray-400"
+                />
+              </div>
+
+              {/* Email */}
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-lg font-semibold text-white flex items-center gap-2">
+                  <Mail className="w-5 h-5 text-yellow-400" />
+                  Email Address *
+                </Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="your.email@example.com"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  className="h-12 text-lg bg-white/10 border-yellow-400/30 text-white placeholder:text-gray-400"
+                />
+              </div>
+
+              {/* Phone */}
+              <div className="space-y-2">
+                <Label htmlFor="phone" className="text-lg font-semibold text-white flex items-center gap-2">
+                  <Phone className="w-5 h-5 text-yellow-400" />
+                  Phone Number *
+                </Label>
+                <Input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  placeholder="Enter your phone number"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  required
+                  className="h-12 text-lg bg-white/10 border-yellow-400/30 text-white placeholder:text-gray-400"
+                />
+              </div>
+
+              {/* Membership ID */}
+              <div className="space-y-2">
+                <Label htmlFor="membershipId" className="text-lg font-semibold text-white flex items-center gap-2">
+                  <Hash className="w-5 h-5 text-yellow-400" />
+                  SHOSH Membership ID *
+                </Label>
+                <Input
+                  id="membershipId"
+                  name="membershipId"
+                  type="text"
+                  placeholder="Enter your membership ID"
+                  value={formData.membershipId}
+                  onChange={handleChange}
+                  required
+                  className="h-12 text-lg bg-white/10 border-yellow-400/30 text-white placeholder:text-gray-400"
+                />
+              </div>
+
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                disabled={loading || isPromotionClosed}
+                className="w-full h-14 text-lg font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-red-900 shadow-lg"
+              >
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    >
+                      <Gift className="w-5 h-5" />
+                    </motion.div>
+                    Submitting...
+                  </span>
+                ) : isPromotionClosed ? (
+                  "Promotion Closed"
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <Gift className="w-5 h-5" />
+                    Submit Entry
+                  </span>
+                )}
+              </Button>
+
+              <p className="text-center text-sm text-gray-400 pt-2">
+                By entering, you confirm you are a SHOSH member and agree to the terms and conditions.
+              </p>
+            </form>
+          </motion.div>
         </div>
       </section>
 
