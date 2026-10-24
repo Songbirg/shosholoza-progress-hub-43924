@@ -57,32 +57,47 @@ const LuckyDraw = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.from("lucky_draw_entries").insert([
-        {
-          full_name: formData.fullName,
-          email: formData.email,
-          phone: formData.phone,
-          membership_id: formData.membershipId,
-        },
-      ]);
+      // Validate form data
+      if (!formData.fullName.trim() || !formData.email.trim() || 
+          !formData.phone.trim() || !formData.membershipId.trim()) {
+        throw new Error("All fields are required");
+      }
 
-      if (error) throw error;
+      // Submit to Supabase
+      const { data, error } = await supabase.from("lucky_draw_entries").insert([
+        {
+          full_name: formData.fullName.trim(),
+          email: formData.email.trim().toLowerCase(),
+          phone: formData.phone.trim(),
+          membership_id: formData.membershipId.trim(),
+        },
+      ]).select();
+
+      if (error) {
+        console.error("Supabase error:", error);
+        throw new Error(error.message || "Failed to submit entry");
+      }
+
+      console.log("Entry submitted successfully:", data);
 
       toast({
-        title: "Entry Submitted!",
-        description: "Your lucky draw entry has been registered successfully.",
+        title: "✅ Entry Submitted!",
+        description: "Your lucky draw entry has been registered successfully. Good luck!",
       });
 
+      // Clear form
       setFormData({
         fullName: "",
         email: "",
         phone: "",
         membershipId: "",
       });
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Submission error:", error);
+      
       toast({
-        title: "Submission Failed",
-        description: "Please try again or contact support.",
+        title: "❌ Submission Failed",
+        description: error.message || "Please try again or contact support.",
         variant: "destructive",
       });
     } finally {
@@ -98,7 +113,7 @@ const LuckyDraw = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-red-950 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-cyan-950 to-slate-900">
       <Navigation />
       
       {/* Floating Confetti Background */}
@@ -106,7 +121,7 @@ const LuckyDraw = () => {
         {[...Array(20)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-2 h-2 bg-yellow-400 opacity-60"
+            className="absolute w-2 h-2 bg-cyan-400 opacity-60"
             style={{
               left: `${Math.random() * 100}%`,
               top: `-10%`,
@@ -128,8 +143,8 @@ const LuckyDraw = () => {
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 px-4 overflow-hidden">
         {/* Glow Effects */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-yellow-500/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-red-600/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-cyan-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-teal-600/10 rounded-full blur-3xl" />
 
         <div className="container mx-auto max-w-6xl relative z-10">
           <div className="text-center">
@@ -140,7 +155,7 @@ const LuckyDraw = () => {
               transition={{ duration: 0.6 }}
               className="inline-block mb-6"
             >
-              <div className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-red-900 px-6 py-2 rounded-full font-bold text-sm shadow-lg">
+              <div className="bg-gradient-to-r from-cyan-400 to-teal-500 text-cyan-900 px-6 py-2 rounded-full font-bold text-sm shadow-lg">
                 OFFICIAL SHOSH LUCKY DRAW 2026
               </div>
             </motion.div>
@@ -166,13 +181,13 @@ const LuckyDraw = () => {
                 <motion.div
                   animate={{
                     boxShadow: [
-                      "0 0 20px rgba(250, 204, 21, 0.3)",
-                      "0 0 40px rgba(250, 204, 21, 0.5)",
-                      "0 0 20px rgba(250, 204, 21, 0.3)",
+                      "0 0 20px rgba(34, 211, 238, 0.3)",
+                      "0 0 40px rgba(34, 211, 238, 0.5)",
+                      "0 0 20px rgba(34, 211, 238, 0.3)",
                     ],
                   }}
                   transition={{ duration: 2, repeat: Infinity }}
-                  className="bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 text-transparent bg-clip-text"
+                  className="bg-gradient-to-br from-cyan-400 via-cyan-500 to-teal-500 text-transparent bg-clip-text"
                 >
                   <h2 className="text-6xl md:text-8xl lg:text-9xl font-black leading-none">
                     WIN UP TO
@@ -181,8 +196,8 @@ const LuckyDraw = () => {
                     R100,000!
                   </h2>
                 </motion.div>
-                <Sparkles className="absolute -top-4 -right-4 w-12 h-12 text-yellow-400 animate-pulse" />
-                <Sparkles className="absolute -bottom-4 -left-4 w-8 h-8 text-yellow-300 animate-pulse" style={{ animationDelay: "0.5s" }} />
+                <Sparkles className="absolute -top-4 -right-4 w-12 h-12 text-cyan-400 animate-pulse" />
+                <Sparkles className="absolute -bottom-4 -left-4 w-8 h-8 text-cyan-300 animate-pulse" style={{ animationDelay: "0.5s" }} />
               </div>
             </motion.div>
 
@@ -191,7 +206,7 @@ const LuckyDraw = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.6 }}
-              className="text-xl md:text-2xl text-yellow-400 font-bold mb-4"
+              className="text-xl md:text-2xl text-cyan-400 font-bold mb-4"
             >
               The number of votes we get will be the prize money.
             </motion.p>
@@ -215,7 +230,7 @@ const LuckyDraw = () => {
               <Link to="/lucky-draw" scroll={false}>
                 <Button
                   size="lg"
-                  className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-red-900 font-bold px-10 py-7 text-lg shadow-2xl"
+                  className="bg-gradient-to-r from-cyan-400 to-teal-500 hover:from-cyan-500 hover:to-teal-600 text-cyan-900 font-bold px-10 py-7 text-lg shadow-2xl"
                   onClick={() => document.getElementById('entry-form')?.scrollIntoView({ behavior: 'smooth' })}
                 >
                   ENTER THE DRAW
@@ -231,7 +246,7 @@ const LuckyDraw = () => {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-2 border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-red-900 px-10 py-7 text-lg font-bold"
+                  className="border-2 border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-cyan-900 px-10 py-7 text-lg font-bold"
                 >
                   BECOME A MEMBER
                   <ExternalLink className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -247,7 +262,7 @@ const LuckyDraw = () => {
                 transition={{ delay: 1 }}
                 className="mt-12 max-w-2xl mx-auto"
               >
-                <p className="text-yellow-400 text-sm font-semibold mb-4 uppercase tracking-wide">
+                <p className="text-cyan-400 text-sm font-semibold mb-4 uppercase tracking-wide">
                   Closing in:
                 </p>
                 <div className="grid grid-cols-4 gap-4">
@@ -257,8 +272,8 @@ const LuckyDraw = () => {
                     { label: "Minutes", value: timeLeft.minutes },
                     { label: "Seconds", value: timeLeft.seconds },
                   ].map((item, i) => (
-                    <div key={i} className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-yellow-400/30">
-                      <div className="text-3xl md:text-4xl font-black text-yellow-400">
+                    <div key={i} className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-cyan-400/30">
+                      <div className="text-3xl md:text-4xl font-black text-cyan-400">
                         {String(item.value).padStart(2, "0")}
                       </div>
                       <div className="text-xs text-gray-400 uppercase mt-1">{item.label}</div>
@@ -300,20 +315,20 @@ const LuckyDraw = () => {
               {
                 step: "STEP 1",
                 icon: Users,
-                title: "BE A SHOSH MEMBER",
-                description: "The promotion is intended for SHOSH members. Visit shosh.org.za/candidate to register as a member and review eligibility requirements.",
+                title: "BECOME A SHOSH MEMBER FIRST",
+                description: "Register as a SHOSH member at shosh.org.za/candidate to be eligible for the lucky draw.",
               },
               {
                 step: "STEP 2",
                 icon: CheckCircle,
-                title: "CHECK THE PROMOTION DETAILS",
-                description: "Visit the official SHOSH website to learn how the lucky draw works, including any voting or participation requirements.",
+                title: "WE PUT YOUR NAME IN THE DRAW",
+                description: "Once verified, your name will be entered into the official SHOSH Lucky Draw for a chance to win.",
               },
               {
                 step: "STEP 3",
                 icon: Award,
-                title: "LOOK OUT FOR THE DRAW",
-                description: "Check the official announcements for the draw outcome and any instructions for winners.",
+                title: "WATCH THE DRAW ON 12 NOVEMBER",
+                description: "Tune in on 12 November 2026 to watch the live draw and see if you're the lucky winner!",
               },
             ].map((item, i) => (
               <motion.div
@@ -323,15 +338,15 @@ const LuckyDraw = () => {
                 transition={{ duration: 0.6, delay: i * 0.2 }}
                 viewport={{ once: true }}
                 whileHover={{ y: -8, scale: 1.02 }}
-                className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-sm rounded-2xl p-8 border border-yellow-400/20 relative overflow-hidden group"
+                className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-sm rounded-2xl p-8 border border-cyan-400/20 relative overflow-hidden group"
               >
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 to-yellow-600" />
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-400 to-teal-500" />
                 
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full mb-6 group-hover:scale-110 transition-transform">
-                  <item.icon className="w-8 h-8 text-red-900" strokeWidth={2.5} />
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-cyan-400 to-teal-500 rounded-full mb-6 group-hover:scale-110 transition-transform">
+                  <item.icon className="w-8 h-8 text-cyan-900" strokeWidth={2.5} />
                 </div>
 
-                <div className="text-yellow-400 text-sm font-bold mb-2">{item.step}</div>
+                <div className="text-cyan-400 text-sm font-bold mb-2">{item.step}</div>
                 <h3 className="text-2xl font-bold text-white mb-4">{item.title}</h3>
                 <p className="text-gray-300 leading-relaxed">{item.description}</p>
               </motion.div>
@@ -342,7 +357,7 @@ const LuckyDraw = () => {
 
       {/* Prize Money Section */}
       <section className="py-20 px-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-yellow-600/20 to-red-600/20" />
+        <div className="absolute inset-0 bg-gradient-to-br from-cyan-600/20 to-teal-600/20" />
         
         <div className="container mx-auto max-w-4xl relative z-10">
           <motion.div
@@ -350,9 +365,9 @@ const LuckyDraw = () => {
             whileInView={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="text-center bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-xl rounded-3xl p-12 md:p-16 border-4 border-yellow-400 shadow-2xl"
+            className="text-center bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-xl rounded-3xl p-12 md:p-16 border-4 border-cyan-400 shadow-2xl"
           >
-            <Gift className="w-20 h-20 text-yellow-400 mx-auto mb-8 animate-bounce" />
+            <Gift className="w-20 h-20 text-cyan-400 mx-auto mb-8 animate-bounce" />
             
             <h2 className="text-3xl md:text-5xl font-black text-white mb-6">
               YOUR VOTES. THE PRIZE MONEY.
@@ -404,13 +419,13 @@ const LuckyDraw = () => {
               {
                 label: "CLOSING DATE",
                 date: "4 NOVEMBER 2026",
-                color: "from-red-600 to-red-700",
+                color: "from-teal-600 to-teal-700",
                 icon: Calendar,
               },
               {
                 label: "DRAW DATE",
                 date: "12 NOVEMBER 2026",
-                color: "from-yellow-500 to-yellow-600",
+                color: "from-cyan-500 to-cyan-600",
                 icon: Gift,
               },
             ].map((item, i) => (
@@ -421,13 +436,13 @@ const LuckyDraw = () => {
                 transition={{ duration: 0.6, delay: i * 0.2 }}
                 viewport={{ once: true }}
                 whileHover={{ y: -8 }}
-                className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-10 border-4 border-yellow-400 text-center relative overflow-hidden group shadow-xl"
+                className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-10 border-4 border-cyan-400 text-center relative overflow-hidden group shadow-xl"
               >
                 <div className={`absolute top-0 left-0 w-full h-2 bg-gradient-to-r ${item.color}`} />
                 
-                <item.icon className="w-16 h-16 text-yellow-400 mx-auto mb-6 group-hover:scale-110 transition-transform" />
+                <item.icon className="w-16 h-16 text-cyan-400 mx-auto mb-6 group-hover:scale-110 transition-transform" />
                 
-                <div className="text-yellow-400 text-sm font-bold uppercase tracking-wider mb-3">
+                <div className="text-cyan-400 text-sm font-bold uppercase tracking-wider mb-3">
                   {item.label}
                 </div>
                 <div className="text-4xl md:text-5xl font-black text-white">
@@ -438,7 +453,7 @@ const LuckyDraw = () => {
           </div>
 
           {/* Timeline Connector */}
-          <div className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 w-px h-8 bg-yellow-400" />
+          <div className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 w-px h-8 bg-cyan-400" />
         </div>
       </section>
 
@@ -465,13 +480,13 @@ const LuckyDraw = () => {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
             viewport={{ once: true }}
-            className="bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-xl rounded-2xl p-8 md:p-12 border-2 border-yellow-400 shadow-2xl"
+            className="bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-xl rounded-2xl p-8 md:p-12 border-2 border-cyan-400 shadow-2xl"
           >
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Full Name */}
               <div className="space-y-2">
                 <Label htmlFor="fullName" className="text-lg font-semibold text-white flex items-center gap-2">
-                  <User className="w-5 h-5 text-yellow-400" />
+                  <User className="w-5 h-5 text-cyan-400" />
                   Full Name *
                 </Label>
                 <Input
@@ -482,14 +497,14 @@ const LuckyDraw = () => {
                   value={formData.fullName}
                   onChange={handleChange}
                   required
-                  className="h-12 text-lg bg-white/10 border-yellow-400/30 text-white placeholder:text-gray-400"
+                  className="h-12 text-lg bg-white/10 border-cyan-400/30 text-white placeholder:text-gray-400"
                 />
               </div>
 
               {/* Email */}
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-lg font-semibold text-white flex items-center gap-2">
-                  <Mail className="w-5 h-5 text-yellow-400" />
+                  <Mail className="w-5 h-5 text-cyan-400" />
                   Email Address *
                 </Label>
                 <Input
@@ -500,14 +515,14 @@ const LuckyDraw = () => {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="h-12 text-lg bg-white/10 border-yellow-400/30 text-white placeholder:text-gray-400"
+                  className="h-12 text-lg bg-white/10 border-cyan-400/30 text-white placeholder:text-gray-400"
                 />
               </div>
 
               {/* Phone */}
               <div className="space-y-2">
                 <Label htmlFor="phone" className="text-lg font-semibold text-white flex items-center gap-2">
-                  <Phone className="w-5 h-5 text-yellow-400" />
+                  <Phone className="w-5 h-5 text-cyan-400" />
                   Phone Number *
                 </Label>
                 <Input
@@ -518,14 +533,14 @@ const LuckyDraw = () => {
                   value={formData.phone}
                   onChange={handleChange}
                   required
-                  className="h-12 text-lg bg-white/10 border-yellow-400/30 text-white placeholder:text-gray-400"
+                  className="h-12 text-lg bg-white/10 border-cyan-400/30 text-white placeholder:text-gray-400"
                 />
               </div>
 
               {/* Membership ID */}
               <div className="space-y-2">
                 <Label htmlFor="membershipId" className="text-lg font-semibold text-white flex items-center gap-2">
-                  <Hash className="w-5 h-5 text-yellow-400" />
+                  <Hash className="w-5 h-5 text-cyan-400" />
                   SHOSH Membership ID *
                 </Label>
                 <Input
@@ -536,7 +551,7 @@ const LuckyDraw = () => {
                   value={formData.membershipId}
                   onChange={handleChange}
                   required
-                  className="h-12 text-lg bg-white/10 border-yellow-400/30 text-white placeholder:text-gray-400"
+                  className="h-12 text-lg bg-white/10 border-cyan-400/30 text-white placeholder:text-gray-400"
                 />
               </div>
 
@@ -544,7 +559,7 @@ const LuckyDraw = () => {
               <Button
                 type="submit"
                 disabled={loading || isPromotionClosed}
-                className="w-full h-14 text-lg font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-red-900 shadow-lg"
+                className="w-full h-14 text-lg font-bold bg-gradient-to-r from-cyan-400 to-teal-500 hover:from-cyan-500 hover:to-teal-600 text-cyan-900 shadow-lg"
               >
                 {loading ? (
                   <span className="flex items-center gap-2">
@@ -575,7 +590,7 @@ const LuckyDraw = () => {
       </section>
 
       {/* Call-to-Action Section */}
-      <section className="py-16 px-4 bg-gradient-to-r from-red-700 via-red-600 to-red-700 relative overflow-hidden">
+      <section className="py-16 px-4 bg-gradient-to-r from-cyan-700 via-cyan-600 to-cyan-700 relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjA1IiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-20" />
         
         <div className="container mx-auto max-w-4xl text-center relative z-10">
@@ -603,7 +618,7 @@ const LuckyDraw = () => {
             >
               <Button
                 size="lg"
-                className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-red-900 font-black px-12 py-8 text-xl shadow-2xl"
+                className="bg-gradient-to-r from-cyan-400 to-teal-500 hover:from-cyan-500 hover:to-teal-600 text-cyan-900 font-black px-12 py-8 text-xl shadow-2xl"
               >
                 BECOME A SHOSH MEMBER
                 <ExternalLink className="ml-3 w-6 h-6 group-hover:translate-x-1 transition-transform" />
@@ -621,8 +636,8 @@ const LuckyDraw = () => {
       <div className="bg-slate-950 py-8 px-4 text-center">
         <div className="container mx-auto max-w-4xl">
           <p className="text-gray-400 text-sm leading-relaxed">
-            <strong className="text-yellow-400">Disclaimer:</strong> Eligibility, participation rules, prize details, and the official terms and conditions must be confirmed on the official SHOSH website at{" "}
-            <a href="https://shosh.org.za/candidate" target="_blank" rel="noopener noreferrer" className="text-yellow-400 hover:underline">
+            <strong className="text-cyan-400">Disclaimer:</strong> Eligibility, participation rules, prize details, and the official terms and conditions must be confirmed on the official SHOSH website at{" "}
+            <a href="https://shosh.org.za/candidate" target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:underline">
               shosh.org.za/candidate
             </a>
             . This promotion page is for informational purposes only.

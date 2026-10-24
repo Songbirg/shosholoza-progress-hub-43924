@@ -5,18 +5,18 @@ import { Link } from "react-router-dom";
 
 const LuckyDrawPromo = () => {
   return (
-    <section className="py-20 px-4 bg-gradient-to-br from-red-900 via-red-800 to-red-900 relative overflow-hidden">
+    <section className="py-20 px-4 bg-gradient-to-br from-cyan-900 via-cyan-800 to-teal-900 relative overflow-hidden">
       {/* Animated background elements */}
       <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-10 left-10 w-64 h-64 bg-yellow-400 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-10 right-10 w-96 h-96 bg-yellow-500 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
+        <div className="absolute top-10 left-10 w-64 h-64 bg-cyan-400 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-10 right-10 w-96 h-96 bg-teal-500 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
       </div>
 
       {/* Floating sparkles */}
       {[...Array(15)].map((_, i) => (
         <motion.div
           key={i}
-          className="absolute w-2 h-2 bg-yellow-300 rounded-full"
+          className="absolute w-2 h-2 bg-cyan-300 rounded-full"
           style={{
             left: `${Math.random() * 100}%`,
             top: `${Math.random() * 100}%`,
@@ -49,7 +49,7 @@ const LuckyDrawPromo = () => {
             transition={{ duration: 2, repeat: Infinity }}
             className="inline-block mb-6"
           >
-            <div className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-red-900 px-6 py-2 rounded-full font-bold text-sm shadow-lg flex items-center gap-2">
+            <div className="bg-gradient-to-r from-cyan-400 to-teal-500 text-cyan-900 px-6 py-2 rounded-full font-bold text-sm shadow-lg flex items-center gap-2">
               <Sparkles className="w-4 h-4" />
               SHOSH LUCKY DRAW 2026
               <Sparkles className="w-4 h-4" />
@@ -65,7 +65,7 @@ const LuckyDrawPromo = () => {
             transition={{ duration: 3, repeat: Infinity }}
             className="mb-8"
           >
-            <Gift className="w-20 h-20 text-yellow-400 mx-auto" strokeWidth={2} />
+            <Gift className="w-20 h-20 text-cyan-400 mx-auto" strokeWidth={2} />
           </motion.div>
 
           {/* Headline */}
@@ -74,20 +74,20 @@ const LuckyDrawPromo = () => {
             <motion.span
               animate={{
                 textShadow: [
-                  "0 0 20px rgba(250, 204, 21, 0.5)",
-                  "0 0 40px rgba(250, 204, 21, 0.8)",
-                  "0 0 20px rgba(250, 204, 21, 0.5)",
+                  "0 0 20px rgba(34, 211, 238, 0.5)",
+                  "0 0 40px rgba(34, 211, 238, 0.8)",
+                  "0 0 20px rgba(34, 211, 238, 0.5)",
                 ],
               }}
               transition={{ duration: 2, repeat: Infinity }}
-              className="block text-6xl md:text-8xl lg:text-9xl bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 text-transparent bg-clip-text"
+              className="block text-6xl md:text-8xl lg:text-9xl bg-gradient-to-r from-cyan-300 via-cyan-400 to-teal-400 text-transparent bg-clip-text"
             >
               R100,000!
             </motion.span>
           </h2>
 
           {/* Description */}
-          <p className="text-xl md:text-2xl text-yellow-400 font-bold mb-4 max-w-3xl mx-auto">
+          <p className="text-xl md:text-2xl text-cyan-300 font-bold mb-4 max-w-3xl mx-auto">
             The number of votes we get will be the prize money
           </p>
 
@@ -97,12 +97,12 @@ const LuckyDrawPromo = () => {
 
           {/* Dates */}
           <div className="flex flex-wrap justify-center gap-6 mb-10">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-yellow-400/30">
-              <div className="text-yellow-400 text-sm font-semibold mb-1">CLOSES</div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-cyan-400/30">
+              <div className="text-cyan-300 text-sm font-semibold mb-1">CLOSES</div>
               <div className="text-2xl md:text-3xl font-black text-white">4 NOV 2026</div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-yellow-400/30">
-              <div className="text-yellow-400 text-sm font-semibold mb-1">DRAW DATE</div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-cyan-400/30">
+              <div className="text-cyan-300 text-sm font-semibold mb-1">DRAW DATE</div>
               <div className="text-2xl md:text-3xl font-black text-white">12 NOV 2026</div>
             </div>
           </div>
@@ -112,7 +112,7 @@ const LuckyDrawPromo = () => {
             <Link to="/lucky-draw" className="group">
               <Button
                 size="lg"
-                className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-red-900 font-black px-10 py-7 text-lg shadow-2xl"
+                className="bg-gradient-to-r from-cyan-400 to-teal-500 hover:from-cyan-500 hover:to-teal-600 text-cyan-900 font-black px-10 py-7 text-lg shadow-2xl"
               >
                 ENTER NOW
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -127,7 +127,7 @@ const LuckyDrawPromo = () => {
               <Button
                 size="lg"
                 variant="outline"
-                className="border-2 border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-red-900 px-10 py-7 text-lg font-bold bg-white/5 backdrop-blur-sm"
+                className="border-2 border-cyan-300 text-cyan-300 hover:bg-cyan-400 hover:text-cyan-900 px-10 py-7 text-lg font-bold bg-white/5 backdrop-blur-sm"
               >
                 BECOME A MEMBER
                 <ExternalLink className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />

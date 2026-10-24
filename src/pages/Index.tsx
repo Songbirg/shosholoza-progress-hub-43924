@@ -4,20 +4,18 @@ import LuckyDrawPromo from "@/components/LuckyDrawPromo";
 import FivePointPlan from "@/components/FivePointPlan";
 import Timeline from "@/components/Timeline";
 import Values from "@/components/Values";
-import BlogSection from "@/components/BlogSection";
 import Footer from "@/components/Footer";
 
 const Index = () => {
   return (
-    <div className="min-h-screen pt-16">
+    <div className="min-h-screen">
       <Navigation />
-      <main className="pt-16">
+      <main>
         <HeroSlider />
         <LuckyDrawPromo />
         <FivePointPlan />
         <Timeline />
         <Values />
-        <BlogSection />
       </main>
       <Footer />
     </div>

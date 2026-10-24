@@ -1,7 +1,7 @@
 -- ============================================================
 --  LUCKY DRAW ENTRIES TABLE
 --  Run this in your Supabase SQL Editor to add lucky draw functionality
---  https://supabase.com/dashboard → your project → SQL Editor
+--  https://supabase.com/dashboard/project/szvovmtjwszfiyfdqqag/sql
 -- ============================================================
 
 -- Create lucky_draw_entries table

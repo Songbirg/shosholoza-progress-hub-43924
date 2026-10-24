@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, FileText, FileCheck } from "lucide-react";
 import { Button } from "./ui/button";
-import shoshLogo from "@/assets/shosh-logo.png";
+import logoImage from "../../images/new images/71cc9b27-9b57-42e2-9c08-13f070abcce7.png";
 import manifestoPdf from "../../images/Manifesto 2026 .pdf";
 import pressStatementPdf from "../../images/shosh_press_conference_statement-v3.pdf";
 
@@ -12,7 +12,6 @@ const Navigation = () => {
 
   const navItems = [
     { name: "Home", path: "/home" },
-    { name: "Shosh News", path: "/blog" },
     { name: "Gallery", path: "/gallery" },
     { name: "Lucky Draw", path: "/lucky-draw" },
     { name: "About", path: "/about" },
@@ -28,7 +27,7 @@ const Navigation = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link to="/home" className="flex items-center">
-            <span className="text-xl font-bold">SHOSH</span>
+            <img src={logoImage} alt="SHOSH Logo" className="h-12 w-auto" />
           </Link>
 
           {/* Desktop Navigation */}
@@ -71,11 +70,6 @@ const Navigation = () => {
                 Press Statement
               </Button>
             </a>
-            <Link to="/candidate" className="hover-scale inline-block">
-              <Button variant="hero" size="sm">
-                Join Shosh
-              </Button>
-            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -127,11 +121,6 @@ const Navigation = () => {
                 Press Statement
               </Button>
             </a>
-            <Link to="/candidate" onClick={() => setIsOpen(false)}>
-              <Button variant="hero" size="sm" className="w-full mt-2">
-                Join Shosh
-              </Button>
-            </Link>
           </div>
         )}
       </div>

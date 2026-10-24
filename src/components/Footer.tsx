@@ -1,96 +1,140 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Facebook, Twitter, Instagram, Youtube, FileText } from "lucide-react";
+import { Facebook, Twitter, Instagram, Youtube, FileText, AlertCircle } from "lucide-react";
 import manifestoPdf from "../../images/Manifesto 2026 .pdf";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
+import { Button } from "./ui/button";
 
 const Footer = () => {
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
+
   return (
-    <footer className="bg-primary text-primary-foreground">
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div>
-            <h3 className="text-xl font-bold mb-4">SHOSH</h3>
-            <p className="text-sm text-primary-foreground/80">
-              Building a better South Africa through social democracy, equal opportunity, and prosperity for all.
-            </p>
-          </div>
+    <>
+      <footer className="bg-primary text-primary-foreground">
+        <div className="container mx-auto px-4 py-12">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div>
+              <h3 className="text-xl font-bold mb-4">SHOSH</h3>
+              <p className="text-sm text-primary-foreground/80">
+                Building a better South Africa through social democracy, equal opportunity, and prosperity for all.
+              </p>
+            </div>
 
-          <div>
-            <h4 className="font-semibold mb-4">Quick Links</h4>
-            <ul className="space-y-2">
-              <li>
-                <Link to="/about" className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-smooth">
-                  About Us
-                </Link>
-              </li>
-              <li>
-                <Link to="/founder" className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-smooth">
-                  Our Founder
-                </Link>
-              </li>
-              <li>
-                <Link to="/values" className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-smooth">
-                  Our Values
-                </Link>
-              </li>
-              <li>
-                <a 
-                  href={manifestoPdf}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-smooth flex items-center gap-1"
-                >
-                  <FileText className="w-4 h-4" />
-                  Download Manifesto
+            <div>
+              <h4 className="font-semibold mb-4">Quick Links</h4>
+              <ul className="space-y-2">
+                <li>
+                  <Link to="/about" className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-smooth">
+                    About Us
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/founder" className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-smooth">
+                    Our Founder
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/values" className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-smooth">
+                    Our Values
+                  </Link>
+                </li>
+                <li>
+                  <a 
+                    href={manifestoPdf}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-smooth flex items-center gap-1"
+                  >
+                    <FileText className="w-4 h-4" />
+                    Download Manifesto
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-4">Get Involved</h4>
+              <ul className="space-y-2">
+                <li>
+                  <Link to="/candidate" className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-smooth">
+                    Join the Party
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/candidate" className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-smooth">
+                    Volunteer
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/contact" className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-smooth">
+                    Contact Us
+                  </Link>
+                </li>
+                <li>
+                  <button
+                    onClick={() => setShowDisclaimer(true)}
+                    className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-smooth flex items-center gap-1"
+                  >
+                    <AlertCircle className="w-4 h-4" />
+                    Lucky Draw Disclaimer
+                  </button>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-4">Connect With Us</h4>
+              <div className="flex space-x-4">
+                <a href="#" className="text-primary-foreground/80 hover:text-primary-foreground transition-smooth" aria-label="Facebook">
+                  <Facebook size={20} />
                 </a>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-semibold mb-4">Get Involved</h4>
-            <ul className="space-y-2">
-              <li>
-                <Link to="/candidate" className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-smooth">
-                  Join the Party
-                </Link>
-              </li>
-              <li>
-                <Link to="/candidate" className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-smooth">
-                  Volunteer
-                </Link>
-              </li>
-              <li>
-                <Link to="/contact" className="text-sm text-primary-foreground/80 hover:text-primary-foreground transition-smooth">
-                  Contact Us
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-semibold mb-4">Connect With Us</h4>
-            <div className="flex space-x-4">
-              <a href="#" className="text-primary-foreground/80 hover:text-primary-foreground transition-smooth" aria-label="Facebook">
-                <Facebook size={20} />
-              </a>
-              <a href="#" className="text-primary-foreground/80 hover:text-primary-foreground transition-smooth" aria-label="Twitter">
-                <Twitter size={20} />
-              </a>
-              <a href="#" className="text-primary-foreground/80 hover:text-primary-foreground transition-smooth" aria-label="Instagram">
-                <Instagram size={20} />
-              </a>
-              <a href="#" className="text-primary-foreground/80 hover:text-primary-foreground transition-smooth" aria-label="YouTube">
-                <Youtube size={20} />
-              </a>
+                <a href="#" className="text-primary-foreground/80 hover:text-primary-foreground transition-smooth" aria-label="Twitter">
+                  <Twitter size={20} />
+                </a>
+                <a href="#" className="text-primary-foreground/80 hover:text-primary-foreground transition-smooth" aria-label="Instagram">
+                  <Instagram size={20} />
+                </a>
+                <a href="#" className="text-primary-foreground/80 hover:text-primary-foreground transition-smooth" aria-label="YouTube">
+                  <Youtube size={20} />
+                </a>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="mt-8 pt-8 border-t border-primary-foreground/20 text-center text-sm text-primary-foreground/60">
-          <p>&copy; {new Date().getFullYear()} Shosholoza Progressive Party. All rights reserved.</p>
+          <div className="mt-8 pt-8 border-t border-primary-foreground/20 text-center text-sm text-primary-foreground/60">
+            <p>&copy; {new Date().getFullYear()} Shosholoza Progressive Party. All rights reserved.</p>
+          </div>
         </div>
-      </div>
-    </footer>
+      </footer>
+
+      {/* Lucky Draw Disclaimer Modal */}
+      <Dialog open={showDisclaimer} onOpenChange={setShowDisclaimer}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-2xl">
+              <AlertCircle className="w-6 h-6 text-cyan-600" />
+              Lucky Draw Disclaimer
+            </DialogTitle>
+          </DialogHeader>
+          <DialogDescription className="text-base leading-relaxed space-y-4 text-foreground">
+            <p>
+              The <strong>Shosholoza Progressive Party</strong> supports free and fair elections and respects the Constitution of the Republic of South Africa and all applicable electoral laws.
+            </p>
+            <p>
+              The <strong>Shosh Lucky Draw</strong> is a gesture of appreciation to our members for their support throughout the party's journey. It is intended solely as an honest "thank you" and must not be interpreted as an inducement to vote, an attempt to manipulate voters, or a condition of political support.
+            </p>
+            <p>
+              No one is forced to join Shosholoza Progressive Party or to vote for it. Participation in the lucky draw is voluntary and does not create any obligation to support the party.
+            </p>
+          </DialogDescription>
+          <div className="flex justify-end mt-4">
+            <Button onClick={() => setShowDisclaimer(false)} className="bg-cyan-600 hover:bg-cyan-700">
+              I Understand
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 

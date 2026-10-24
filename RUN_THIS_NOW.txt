@@ -1,0 +1,30 @@
+═══════════════════════════════════════════════════════════════
+  ⚡ FIX CANDIDATES - RUN THIS NOW
+═══════════════════════════════════════════════════════════════
+
+Your candidates are imported but column names are wrong.
+
+STEP 1: Open Supabase SQL Editor
+────────────────────────────────────────────────────────────
+https://supabase.com/dashboard/project/szvovmtjwszfiyfdqqag/sql
+
+
+STEP 2: Copy ALL the SQL from FIX_COLUMNS_NOW.sql
+────────────────────────────────────────────────────────────
+Open the file: FIX_COLUMNS_NOW.sql
+Copy everything (Ctrl+A, Ctrl+C)
+
+
+STEP 3: Paste in Supabase and click RUN
+────────────────────────────────────────────────────────────
+Paste the SQL and click the RUN button
+
+
+STEP 4: Refresh your admin page
+────────────────────────────────────────────────────────────
+Go to: http://localhost:8080/admin/applications
+Press: Ctrl + Shift + R (hard refresh)
+
+DONE! Your candidates will now appear! ✅
+
+═══════════════════════════════════════════════════════════════

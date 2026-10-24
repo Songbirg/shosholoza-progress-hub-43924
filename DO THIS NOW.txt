@@ -1,0 +1,31 @@
+═══════════════════════════════════════════════════════════════
+  YOUR DATA IS IN SUPABASE - JUST NEED TO RENAME COLUMNS
+═══════════════════════════════════════════════════════════════
+
+I can see your 439 candidates in Supabase!
+
+The problem: Your table is called "Candidates" (capital C)
+             and columns have spaces like "Full Name"
+
+The app needs: Table called "membership_applications"
+               and columns like "full_name" (no spaces)
+
+═══════════════════════════════════════════════════════════════
+  DO THIS RIGHT NOW:
+═══════════════════════════════════════════════════════════════
+
+1. Open: https://supabase.com/dashboard/project/szvovmtjwszfiyfdqqag/sql
+
+2. Copy ALL the SQL from: RENAME_COLUMNS_NOW.sql
+
+3. Paste and click RUN
+
+4. Wait 3 seconds
+
+5. Go to: http://localhost:8080/admin/applications
+
+6. Press Ctrl+Shift+R
+
+YOUR 439 CANDIDATES WILL APPEAR! ✅
+
+═══════════════════════════════════════════════════════════════

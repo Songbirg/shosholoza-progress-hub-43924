@@ -1,0 +1,34 @@
+═══════════════════════════════════════════════════════════════
+  I SEE THE PROBLEM - RLS POLICY ISSUE
+═══════════════════════════════════════════════════════════════
+
+The console shows "No data returned from Supabase"
+
+This means your data exists but RLS (Row Level Security) policies 
+are blocking the "anon" role from reading it.
+
+═══════════════════════════════════════════════════════════════
+  FIX IT NOW (3 STEPS):
+═══════════════════════════════════════════════════════════════
+
+1. Open: https://supabase.com/dashboard/project/szvovmtjwszfiyfdqqag/sql
+
+2. Copy ALL the SQL from: FIX_RLS_NOW.sql
+
+3. Paste and click RUN
+
+4. Go back to: http://localhost:8080/admin/applications
+
+5. Press Ctrl+Shift+R
+
+YOUR 439 CANDIDATES WILL APPEAR! ✅
+
+═══════════════════════════════════════════════════════════════
+
+The SQL will:
+- Remove old RLS policies
+- Create new policies that allow "anon" role to read data
+- Test that it works
+- Show you sample data
+
+═══════════════════════════════════════════════════════════════

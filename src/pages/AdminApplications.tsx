@@ -14,8 +14,17 @@ import {
   supabase,
   type MembershipApplication,
   type CouncillorApplication,
-  type InvestorInquiry,
 } from "@/lib/supabase";
+
+// Lucky Draw Entry interface
+interface LuckyDrawEntry {
+  id: string;
+  created_at: string;
+  full_name: string;
+  email: string;
+  phone: string;
+  membership_id: string;
+}
 import {
   Search, RefreshCw, Users, Clock, CheckCircle2, XCircle,
   ChevronDown, ChevronUp, Eye, Loader2, Download,
@@ -23,11 +32,10 @@ import {
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-type Tab = "candidates" | "councillors" | "investors";
+type Tab = "members" | "luckydraw";
 type SortDir = "asc" | "desc";
 type StatusFilter =
-  | "all" | "pending" | "approved" | "rejected"
-  | "new" | "contacted" | "declined";
+  | "all" | "pending" | "approved" | "rejected";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const STATUS_COLORS: Record<string, string> = {
@@ -49,18 +57,12 @@ const MUNICIPALITIES = [
   "Cape Town", "eThekwini", "Mangaung", "Nelson Mandela Bay",
 ];
 
-const INVESTMENT_RANGES = [
-  "All Ranges", "Under R50,000", "R50,000-R100,000",
-  "R100,000-R500,000", "R500,000-R1,000,000", "R1,000,000+",
-];
-
 const TAB_CONFIG: {
   id: Tab; label: string; icon: React.ElementType;
   activeColor: string; borderColor: string;
 }[] = [
-  { id: "candidates",  label: "Candidates",  icon: Users,      activeColor: "text-green-600",  borderColor: "border-green-600"  },
-  { id: "councillors", label: "Councillors", icon: Building2,  activeColor: "text-yellow-600", borderColor: "border-yellow-500" },
-  { id: "investors",   label: "Sponsors",    icon: TrendingUp, activeColor: "text-blue-600",   borderColor: "border-blue-600"   },
+  { id: "members",     label: "Members",     icon: Users,      activeColor: "text-cyan-600",  borderColor: "border-cyan-600"  },
+  { id: "luckydraw",   label: "Lucky Draw",  icon: TrendingUp, activeColor: "text-blue-600",   borderColor: "border-blue-600"   },
 ];
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
@@ -314,73 +316,10 @@ function CouncillorModal({
 }
 
 // ─── Sponsor Modal ────────────────────────────────────────────────────────────
-function InvestorModal({
-  app, open, onClose, onStatusChange,
-}: {
-  app: InvestorInquiry | null; open: boolean;
-  onClose: () => void;
-  onStatusChange: (id: string, status: string) => Promise<void>;
-}) {
-  const [updating, setUpdating] = useState(false);
-  if (!app) return null;
-
-  const handleUpdate = async (s: string) => {
-    if (!app.id) return;
-    setUpdating(true);
-    await onStatusChange(app.id, s);
-    setUpdating(false);
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-lg">
-            <TrendingUp size={20} className="text-blue-600" />
-            Sponsor Inquiry
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="flex flex-wrap items-center justify-between gap-3 bg-muted/50 rounded-lg p-3">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Status:</span>
-            <StatusBadge status={app.status ?? "new"} />
-          </div>
-          <StatusButtons
-            statuses={["new", "contacted", "declined"]}
-            current={app.status}
-            updating={updating}
-            onUpdate={handleUpdate}
-          />
-        </div>
-
-        <div className="space-y-4 mt-2">
-          <h3 className="font-semibold text-xs uppercase tracking-wide text-blue-700 border-b pb-1">
-            Sponsor Details
-          </h3>
-          <Field label="Full Name" value={app.full_name} icon={Users} />
-          <Field label="Email" value={app.email} icon={Mail} />
-          <Field label="Phone" value={app.phone} icon={Phone} />
-          <Field label="Company / Organisation" value={app.company} icon={Building2} />
-          <Field label="Investment Range" value={app.investment_range} icon={TrendingUp} />
-          <Field label="Area of Interest" value={app.area_of_interest} icon={FileText} />
-          <Field label="Message" value={app.message} icon={FileText} />
-          <Field
-            label="Submitted"
-            value={app.created_at ? new Date(app.created_at).toLocaleString("en-ZA") : undefined}
-            icon={Calendar}
-          />
-          <Field label="Reference ID" value={app.id} icon={Hash} />
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 // ─── Main Page ────────────────────────────────────────────────────────────────
 const AdminApplications = () => {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<Tab>("candidates");
+  const [activeTab, setActiveTab] = useState<Tab>("members");
 
   // ── Candidates state ──────────────────────────────────────────────────────
   const [candidates, setCandidates] = useState<MembershipApplication[]>([]);
@@ -406,29 +345,58 @@ const AdminApplications = () => {
   const [councSelected, setCouncSelected] = useState<CouncillorApplication | null>(null);
   const [councModal, setCouncModal] = useState(false);
 
-  // ── Investors state ───────────────────────────────────────────────────────
-  const [investors, setInvestors] = useState<InvestorInquiry[]>([]);
-  const [invLoading, setInvLoading] = useState(true);
-  const [invError, setInvError] = useState<string | null>(null);
-  const [invSearch, setInvSearch] = useState("");
-  const [invStatus, setInvStatus] = useState<StatusFilter>("all");
-  const [invRange, setInvRange] = useState("All Ranges");
-  const [invSort, setInvSort] = useState<"created_at" | "full_name" | "investment_range" | "status">("created_at");
-  const [invDir, setInvDir] = useState<SortDir>("desc");
-  const [invSelected, setInvSelected] = useState<InvestorInquiry | null>(null);
-  const [invModal, setInvModal] = useState(false);
+  // ── Lucky Draw state ──────────────────────────────────────────────────────
+  const [luckyDrawEntries, setLuckyDrawEntries] = useState<LuckyDrawEntry[]>([]);
+  const [ldLoading, setLdLoading] = useState(true);
+  const [ldError, setLdError] = useState<string | null>(null);
+  const [ldSearch, setLdSearch] = useState("");
+  const [ldSort, setLdSort] = useState<"created_at" | "full_name" | "email">("created_at");
+  const [ldDir, setLdDir] = useState<SortDir>("desc");
+  const [ldSelected, setLdSelected] = useState<LuckyDrawEntry | null>(null);
+  const [ldModal, setLdModal] = useState(false);
 
   // ── Fetches ───────────────────────────────────────────────────────────────
   const fetchCandidates = useCallback(async () => {
     setCandLoading(true);
     setCandError(null);
     try {
-      const { data, error } = await supabase
-        .from("membership_applications")
-        .select("*")
-        .order(candSort, { ascending: candDir === "asc" });
-      if (error) throw new Error(error.message);
-      setCandidates((data as MembershipApplication[]) ?? []);
+      // Try the Candidates table first
+      let response = await supabase
+        .from("Candidates")
+        .select("*", { count: 'exact' })
+        .order("Submitted", { ascending: candDir === "asc" });
+      
+      if (response.error || !response.data || response.data.length === 0) {
+        response = await supabase
+          .from("membership_applications")
+          .select("*", { count: 'exact' })
+          .order(candSort, { ascending: candDir === "asc" });
+      }
+      
+      if (response.error) throw new Error(response.error.message);
+      
+      if (response.data && response.data.length > 0) {
+        // Map the column names from CSV format to app format
+        const mappedData = response.data.map((row: any) => ({
+          id: row.id,
+          created_at: row.Submitted || row.created_at,
+          membership_number: row["Membership #"] || row.membership_number,
+          full_name: row["Full Name"] || row.full_name,
+          surname: row.Surname || row.surname,
+          phone_number: row.Phone || row.phone_number,
+          email: row.Email || row.email,
+          province: row.Province || row.province,
+          city: row.City || row.city,
+          status: row.Status || row.status || "pending",
+          date_of_birth: row.date_of_birth,
+          id_number: row.id_number,
+          residential_address: row.residential_address,
+          area_suburb: row.area_suburb,
+          signature_data_url: row.signature_data_url,
+          user_agent: row.user_agent
+        }));
+        setCandidates(mappedData as MembershipApplication[]);
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to load.";
       setCandError(msg);
@@ -457,35 +425,36 @@ const AdminApplications = () => {
     }
   }, [councSort, councDir, toast]);
 
-  const fetchInvestors = useCallback(async () => {
-    setInvLoading(true);
-    setInvError(null);
+  useEffect(() => { fetchCandidates(); }, [fetchCandidates]);
+  useEffect(() => { fetchCouncillors(); }, [fetchCouncillors]);
+
+  const fetchLuckyDrawEntries = useCallback(async () => {
+    setLdLoading(true);
+    setLdError(null);
     try {
       const { data, error } = await supabase
-        .from("investor_inquiries")
+        .from("lucky_draw_entries")
         .select("*")
-        .order(invSort, { ascending: invDir === "asc" });
+        .order(ldSort, { ascending: ldDir === "asc" });
       if (error) {
         if (error.message.includes("does not exist") || error.code === "42P01") {
-          setInvError("The investor inquiries table has not been created yet. Please run the database migration.");
+          setLdError("The lucky_draw_entries table has not been created yet. Please run the SQL from CREATE_LUCKY_DRAW_TABLE.md file to create the database table.");
         } else {
           throw new Error(error.message);
         }
         return;
       }
-      setInvestors((data as InvestorInquiry[]) ?? []);
+      setLuckyDrawEntries((data as LuckyDrawEntry[]) ?? []);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to load.";
-      setInvError(msg);
-      toast({ title: "Error loading investors", description: msg, variant: "destructive" });
+      setLdError(msg);
+      toast({ title: "Error loading lucky draw entries", description: msg, variant: "destructive" });
     } finally {
-      setInvLoading(false);
+      setLdLoading(false);
     }
-  }, [invSort, invDir, toast]);
+  }, [ldSort, ldDir, toast]);
 
-  useEffect(() => { fetchCandidates(); }, [fetchCandidates]);
-  useEffect(() => { fetchCouncillors(); }, [fetchCouncillors]);
-  useEffect(() => { fetchInvestors(); }, [fetchInvestors]);
+  useEffect(() => { fetchLuckyDrawEntries(); }, [fetchLuckyDrawEntries]);
 
   // ── Status updates ────────────────────────────────────────────────────────
   const updateCandidateStatus = async (id: string, status: string) => {
@@ -501,14 +470,6 @@ const AdminApplications = () => {
     if (error) { toast({ title: "Update failed", description: error.message, variant: "destructive" }); return; }
     setCouncillors((prev) => prev.map((a) => a.id === id ? { ...a, status: status as CouncillorApplication['status'] } : a));
     if (councSelected?.id === id) setCouncSelected((prev) => prev ? { ...prev, status: status as CouncillorApplication['status'] } : prev);
-    toast({ title: "Status updated", description: `Marked as ${status}.` });
-  };
-
-  const updateInvestorStatus = async (id: string, status: string) => {
-    const { error } = await supabase.from("investor_inquiries").update({ status }).eq("id", id);
-    if (error) { toast({ title: "Update failed", description: error.message, variant: "destructive" }); return; }
-    setInvestors((prev) => prev.map((a) => a.id === id ? { ...a, status: status as InvestorInquiry['status'] } : a));
-    if (invSelected?.id === id) setInvSelected((prev) => prev ? { ...prev, status: status as InvestorInquiry['status'] } : prev);
     toast({ title: "Status updated", description: `Marked as ${status}.` });
   };
 
@@ -535,16 +496,6 @@ const AdminApplications = () => {
     );
   });
 
-  const filteredInvestors = investors.filter((a) => {
-    const q = invSearch.toLowerCase();
-    return (
-      (!q || a.full_name.toLowerCase().includes(q) || a.email.toLowerCase().includes(q) ||
-        a.phone.includes(q) || (a.company ?? "").toLowerCase().includes(q))
-      && (invStatus === "all" || a.status === invStatus)
-      && (invRange === "All Ranges" || a.investment_range === invRange)
-    );
-  });
-
   // ── Stats ─────────────────────────────────────────────────────────────────
   const candStats = {
     total:    candidates.length,
@@ -558,12 +509,6 @@ const AdminApplications = () => {
     approved: councillors.filter((a) => a.status === "approved").length,
     rejected: councillors.filter((a) => a.status === "rejected").length,
   };
-  const invStats = {
-    total:     investors.length,
-    new_count: investors.filter((a) => a.status === "new").length,
-    contacted: investors.filter((a) => a.status === "contacted").length,
-    declined:  investors.filter((a) => a.status === "declined").length,
-  };
 
   // ── Sort toggles ──────────────────────────────────────────────────────────
   function toggleCandSort(field: "created_at" | "full_name" | "province" | "status") {
@@ -573,10 +518,6 @@ const AdminApplications = () => {
   function toggleCouncSort(field: "created_at" | "name" | "municipality" | "status") {
     if (councSort === field) setCouncDir((d) => d === "asc" ? "desc" : "asc");
     else { setCouncSort(field); setCouncDir("asc"); }
-  }
-  function toggleInvSort(field: "created_at" | "full_name" | "investment_range" | "status") {
-    if (invSort === field) setInvDir((d) => d === "asc" ? "desc" : "asc");
-    else { setInvSort(field); setInvDir("asc"); }
   }
 
   // ── CSV export ────────────────────────────────────────────────────────────
@@ -607,14 +548,6 @@ const AdminApplications = () => {
     ]);
     downloadCSV("councillors.csv", [h, ...rows]);
   }
-  function exportInvestors() {
-    const h = ["Submitted","Full Name","Company","Investment Range","Phone","Email","Status"];
-    const rows = filteredInvestors.map((a) => [
-      a.created_at ? new Date(a.created_at).toLocaleDateString("en-ZA") : "",
-      a.full_name, a.company ?? "", a.investment_range ?? "", a.phone, a.email, a.status ?? "new",
-    ]);
-    downloadCSV("investors.csv", [h, ...rows]);
-  }
 
   // ── Sort icon ─────────────────────────────────────────────────────────────
   function SortIcon({ active, dir }: { active: boolean; dir: SortDir }) {
@@ -632,7 +565,7 @@ const AdminApplications = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
           <p className="text-muted-foreground mt-1">
-            Manage membership applications, councillor applications, and investor inquiries.
+            Manage membership applications, councillor applications, and lucky draw entries.
           </p>
         </div>
 
@@ -656,8 +589,8 @@ const AdminApplications = () => {
           </div>
         </div>
 
-        {/* ── Candidates Tab ──────────────────────────────────────────────── */}
-        {activeTab === "candidates" && (
+        {/* ── Members Tab ──────────────────────────────────────────────── */}
+        {activeTab === "members" && (
           <div className="space-y-6">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <StatCard icon={Users}        label="Total"    value={candStats.total}    color="bg-green-600" />
@@ -885,117 +818,151 @@ const AdminApplications = () => {
           </div>
         )}
 
-        {/* ── Investors Tab ────────────────────────────────────────────────── */}
-        {activeTab === "investors" && (
+        {/* ── Lucky Draw Tab ───────────────────────────────────────────────── */}
+        {activeTab === "luckydraw" && (
           <div className="space-y-6">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <StatCard icon={TrendingUp}   label="Total"     value={invStats.total}     color="bg-blue-600" />
-              <StatCard icon={Clock}        label="New"       value={invStats.new_count}  color="bg-blue-500" />
-              <StatCard icon={CheckCircle2} label="Contacted" value={invStats.contacted}  color="bg-green-500" />
-              <StatCard icon={XCircle}      label="Declined"  value={invStats.declined}   color="bg-red-500" />
+              <StatCard icon={TrendingUp}   label="Total Entries" value={luckyDrawEntries.length} color="bg-blue-600" />
+              <StatCard icon={Clock}        label="This Month"    value={luckyDrawEntries.filter(e => new Date(e.created_at).getMonth() === new Date().getMonth()).length} color="bg-blue-500" />
+              <StatCard icon={CheckCircle2} label="This Week"     value={luckyDrawEntries.filter(e => {
+                const weekAgo = new Date();
+                weekAgo.setDate(weekAgo.getDate() - 7);
+                return new Date(e.created_at) >= weekAgo;
+              }).length} color="bg-green-500" />
+              <StatCard icon={Users}        label="Today"         value={luckyDrawEntries.filter(e => new Date(e.created_at).toDateString() === new Date().toDateString()).length} color="bg-yellow-500" />
             </div>
 
             <div className="flex flex-wrap gap-3 items-center">
               <div className="relative flex-1 min-w-[200px]">
                 <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <Input placeholder="Search name, email, company…" value={invSearch} onChange={(e) => setInvSearch(e.target.value)} className="pl-9" />
+                <Input placeholder="Search name, email, phone, membership ID…" value={ldSearch} onChange={(e) => setLdSearch(e.target.value)} className="pl-9" />
               </div>
-              <Select value={invStatus} onValueChange={(v) => setInvStatus(v as StatusFilter)}>
-                <SelectTrigger className="w-36"><SelectValue placeholder="Status" /></SelectTrigger>
-                <SelectContent>
-                  {["all","new","contacted","declined"].map((s) => (
-                    <SelectItem key={s} value={s}>{s.charAt(0).toUpperCase()+s.slice(1)}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={invRange} onValueChange={setInvRange}>
-                <SelectTrigger className="w-48"><SelectValue placeholder="Investment Range" /></SelectTrigger>
-                <SelectContent>
-                  {INVESTMENT_RANGES.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <Button variant="outline" size="sm" onClick={fetchInvestors} className="gap-2">
+              <Button variant="outline" size="sm" onClick={fetchLuckyDrawEntries} className="gap-2">
                 <RefreshCw size={14} />Refresh
               </Button>
-              <Button variant="outline" size="sm" onClick={exportInvestors} className="gap-2">
+              <Button variant="outline" size="sm" onClick={() => {
+                const headers = ["Date", "Full Name", "Email", "Phone", "Membership ID"];
+                const filteredLd = luckyDrawEntries.filter((e) => 
+                  !ldSearch || 
+                  e.full_name.toLowerCase().includes(ldSearch.toLowerCase()) ||
+                  e.email.toLowerCase().includes(ldSearch.toLowerCase()) ||
+                  e.phone.includes(ldSearch) ||
+                  e.membership_id.toLowerCase().includes(ldSearch.toLowerCase())
+                );
+                const rows = filteredLd.map((e) => [
+                  new Date(e.created_at).toLocaleString(),
+                  e.full_name,
+                  e.email,
+                  e.phone,
+                  e.membership_id,
+                ]);
+                const csvContent = [
+                  headers.join(","),
+                  ...rows.map((row) => row.map((cell) => `"${cell}"`).join(",")),
+                ].join("\n");
+                const blob = new Blob([csvContent], { type: "text/csv" });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `lucky-draw-entries-${new Date().toISOString().split("T")[0]}.csv`;
+                a.click();
+              }} className="gap-2">
                 <Download size={14} />Export CSV
               </Button>
             </div>
 
             <div className="rounded-lg border bg-card overflow-hidden">
-              {invLoading ? (
+              {ldLoading ? (
                 <div className="flex items-center justify-center py-24 text-muted-foreground gap-3">
-                  <Loader2 size={24} className="animate-spin" /><span>Loading investors…</span>
+                  <Loader2 size={24} className="animate-spin" /><span>Loading lucky draw entries…</span>
                 </div>
-              ) : invError ? (
-                <div className="flex flex-col items-center justify-center py-24 gap-4">
+              ) : ldError ? (
+                <div className="flex flex-col items-center justify-center py-24 gap-4 px-4">
                   <XCircle size={40} className="text-red-400" />
-                  <p className="text-muted-foreground text-center max-w-sm">{invError}</p>
-                  <Button variant="outline" onClick={fetchInvestors}>Try Again</Button>
+                  <div className="text-center max-w-2xl space-y-3">
+                    <p className="text-lg font-semibold text-foreground">Database Table Not Found</p>
+                    <p className="text-muted-foreground">{ldError}</p>
+                    <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mt-4">
+                      <p className="text-sm font-semibold text-yellow-900 dark:text-yellow-200 mb-2">Quick Fix:</p>
+                      <ol className="text-sm text-left text-yellow-800 dark:text-yellow-300 space-y-2 list-decimal list-inside">
+                        <li>Open: <a href="https://supabase.com/dashboard/project/szvovmtjwszfiyfdqqag/sql" target="_blank" rel="noopener noreferrer" className="underline font-mono">Supabase SQL Editor</a></li>
+                        <li>Copy SQL from: <span className="font-mono bg-yellow-100 dark:bg-yellow-900/40 px-1 rounded">⚠️_RUN_THIS_SQL_NOW.md</span></li>
+                        <li>Click "Run" in Supabase</li>
+                        <li>Refresh this page</li>
+                      </ol>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 mt-2">
+                    <Button 
+                      variant="default"
+                      onClick={() => window.open('https://supabase.com/dashboard/project/szvovmtjwszfiyfdqqag/sql', '_blank')}
+                      className="gap-2"
+                    >
+                      Open Supabase SQL Editor
+                    </Button>
+                    <Button variant="outline" onClick={fetchLuckyDrawEntries}>Try Again</Button>
+                  </div>
                 </div>
-              ) : filteredInvestors.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-24 gap-3 text-muted-foreground">
-                  <TrendingUp size={40} className="opacity-30" />
-                  <p>{investors.length === 0 ? "No investor inquiries yet." : "No investors match your filters."}</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="bg-muted/60 border-b">
-                      <tr>
-                        {([
-                          { label: "Submitted",        field: "created_at" },
-                          { label: "Full Name",        field: "full_name" },
-                          { label: "Company",          field: null },
-                          { label: "Investment Range", field: "investment_range" },
-                          { label: "Phone",            field: null },
-                          { label: "Email",            field: null },
-                          { label: "Status",           field: "status" },
-                          { label: "",                 field: null },
-                        ] as { label: string; field: typeof invSort | null }[]).map(({ label, field }) => (
-                          <th
-                            key={label || "actions"}
-                            className={`px-4 py-3 text-left font-semibold text-muted-foreground whitespace-nowrap ${field ? "cursor-pointer select-none hover:text-foreground" : ""}`}
-                            onClick={() => field && toggleInvSort(field)}
-                          >
-                            <span className="inline-flex items-center gap-1">
-                              {label}
-                              {field && <SortIcon active={invSort === field} dir={invDir} />}
-                            </span>
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredInvestors.map((app, i) => (
-                        <tr key={app.id} className={`border-b last:border-0 transition-colors hover:bg-muted/30 ${i % 2 === 0 ? "" : "bg-muted/10"}`}>
-                          <td className="px-4 py-3 whitespace-nowrap text-muted-foreground text-xs">
-                            {app.created_at ? new Date(app.created_at).toLocaleDateString("en-ZA") : "—"}
-                          </td>
-                          <td className="px-4 py-3 whitespace-nowrap font-medium">{app.full_name}</td>
-                          <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
-                            {app.company || <span className="italic opacity-50">—</span>}
-                          </td>
-                          <td className="px-4 py-3 whitespace-nowrap">{app.investment_range}</td>
-                          <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">{app.phone}</td>
-                          <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">{app.email}</td>
-                          <td className="px-4 py-3 whitespace-nowrap"><StatusBadge status={app.status ?? "new"} /></td>
-                          <td className="px-4 py-3 whitespace-nowrap">
-                            <Button size="sm" variant="ghost" className="gap-1.5 h-8" onClick={() => { setInvSelected(app); setInvModal(true); }}>
-                              <Eye size={14} />View
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-              {!invLoading && !invError && filteredInvestors.length > 0 && (
-                <div className="px-4 py-3 border-t bg-muted/30 text-xs text-muted-foreground">
-                  Showing {filteredInvestors.length} of {investors.length} investor{investors.length !== 1 ? "s" : ""}
-                </div>
-              )}
+              ) : (() => {
+                const filteredLd = luckyDrawEntries.filter((e) => 
+                  !ldSearch || 
+                  e.full_name.toLowerCase().includes(ldSearch.toLowerCase()) ||
+                  e.email.toLowerCase().includes(ldSearch.toLowerCase()) ||
+                  e.phone.includes(ldSearch) ||
+                  e.membership_id.toLowerCase().includes(ldSearch.toLowerCase())
+                );
+                return filteredLd.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-24 gap-3 text-muted-foreground">
+                    <TrendingUp size={40} className="opacity-30" />
+                    <p>{luckyDrawEntries.length === 0 ? "No lucky draw entries yet." : "No entries match your search."}</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-muted/60 border-b">
+                          <tr>
+                            <th className="px-4 py-3 text-left font-semibold text-muted-foreground whitespace-nowrap cursor-pointer select-none hover:text-foreground" onClick={() => { setLdSort("created_at"); setLdDir(ldDir === "asc" ? "desc" : "asc"); }}>
+                              <span className="inline-flex items-center gap-1">Submitted <SortIcon active={ldSort === "created_at"} dir={ldDir} /></span>
+                            </th>
+                            <th className="px-4 py-3 text-left font-semibold text-muted-foreground whitespace-nowrap cursor-pointer select-none hover:text-foreground" onClick={() => { setLdSort("full_name"); setLdDir(ldDir === "asc" ? "desc" : "asc"); }}>
+                              <span className="inline-flex items-center gap-1">Full Name <SortIcon active={ldSort === "full_name"} dir={ldDir} /></span>
+                            </th>
+                            <th className="px-4 py-3 text-left font-semibold text-muted-foreground whitespace-nowrap cursor-pointer select-none hover:text-foreground" onClick={() => { setLdSort("email"); setLdDir(ldDir === "asc" ? "desc" : "asc"); }}>
+                              <span className="inline-flex items-center gap-1">Email <SortIcon active={ldSort === "email"} dir={ldDir} /></span>
+                            </th>
+                            <th className="px-4 py-3 text-left font-semibold text-muted-foreground whitespace-nowrap">Phone</th>
+                            <th className="px-4 py-3 text-left font-semibold text-muted-foreground whitespace-nowrap">Membership ID</th>
+                            <th className="px-4 py-3 text-left font-semibold text-muted-foreground whitespace-nowrap"></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredLd.map((entry, i) => (
+                            <tr key={entry.id} className={`border-b last:border-0 transition-colors hover:bg-muted/30 ${i % 2 === 0 ? "" : "bg-muted/10"}`}>
+                              <td className="px-4 py-3 whitespace-nowrap text-muted-foreground text-xs">
+                                {new Date(entry.created_at).toLocaleDateString("en-ZA")} <br />
+                                <span className="text-xs opacity-75">{new Date(entry.created_at).toLocaleTimeString("en-ZA")}</span>
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap font-medium">{entry.full_name}</td>
+                              <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">{entry.email}</td>
+                              <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">{entry.phone}</td>
+                              <td className="px-4 py-3 whitespace-nowrap font-mono text-sm">{entry.membership_id}</td>
+                              <td className="px-4 py-3 whitespace-nowrap">
+                                <Button size="sm" variant="ghost" className="gap-1.5 h-8" onClick={() => { setLdSelected(entry); setLdModal(true); }}>
+                                  <Eye size={14} />View
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="px-4 py-3 border-t bg-muted/30 text-xs text-muted-foreground">
+                      Showing {filteredLd.length} of {luckyDrawEntries.length} entr{luckyDrawEntries.length !== 1 ? "ies" : "y"}
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
         )}
@@ -1015,12 +982,30 @@ const AdminApplications = () => {
         onClose={() => { setCouncModal(false); setCouncSelected(null); }}
         onStatusChange={updateCouncillorStatus}
       />
-      <InvestorModal
-        app={invSelected}
-        open={invModal}
-        onClose={() => { setInvModal(false); setInvSelected(null); }}
-        onStatusChange={updateInvestorStatus}
-      />
+      
+      {/* Lucky Draw Entry Modal */}
+      <Dialog open={ldModal} onOpenChange={(v) => !v && setLdModal(false)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-lg">
+              <TrendingUp size={20} className="text-blue-600" />
+              Lucky Draw Entry
+            </DialogTitle>
+          </DialogHeader>
+          {ldSelected && (
+            <div className="space-y-4 mt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <Field label="Full Name" value={ldSelected.full_name} icon={Users} />
+                <Field label="Email" value={ldSelected.email} icon={Mail} />
+                <Field label="Phone" value={ldSelected.phone} icon={Phone} />
+                <Field label="Membership ID" value={ldSelected.membership_id} icon={Hash} />
+                <Field label="Submitted" value={new Date(ldSelected.created_at).toLocaleString("en-ZA")} icon={Calendar} />
+                <Field label="Entry ID" value={ldSelected.id} icon={Hash} />
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

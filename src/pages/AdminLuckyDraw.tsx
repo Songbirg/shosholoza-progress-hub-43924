@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { Gift, Download, Trash2, Mail, Phone, User, Hash, Calendar } from "lucide-react";
+import { Gift, Download, Trash2, Mail, Phone, User, Hash, Calendar, RefreshCw } from "lucide-react";
 import Navigation from "@/components/Navigation";
+import AdminAuth from "@/components/AdminAuth";
 
 interface LuckyDrawEntry {
   id: string;
@@ -16,25 +17,41 @@ interface LuckyDrawEntry {
 const AdminLuckyDraw = () => {
   const [entries, setEntries] = useState<LuckyDrawEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState("");
 
   useEffect(() => {
     fetchEntries();
+    
+    // Set up auto-refresh every 30 seconds
+    const interval = setInterval(() => {
+      fetchEntries();
+    }, 30000);
+    
+    return () => clearInterval(interval);
   }, []);
 
-  const fetchEntries = async () => {
+  const fetchEntries = async (showRefreshing = false) => {
+    if (showRefreshing) setRefreshing(true);
+    
     try {
       const { data, error } = await supabase
         .from("lucky_draw_entries")
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching entries:", error);
+        throw error;
+      }
+      
       setEntries(data || []);
+      console.log(`Fetched ${data?.length || 0} entries`);
     } catch (error) {
       console.error("Error fetching entries:", error);
     } finally {
       setLoading(false);
+      if (showRefreshing) setRefreshing(false);
     }
   };
 
@@ -87,10 +104,11 @@ const AdminLuckyDraw = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800">
-      <Navigation />
-      
-      <div className="container mx-auto px-4 py-24">
+    <AdminAuth>
+      <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800">
+        <Navigation />
+        
+        <div className="container mx-auto px-4 py-24">
         {/* Header */}
         <div className="bg-gradient-to-r from-yellow-600 to-yellow-700 rounded-2xl p-8 mb-8 shadow-2xl">
           <div className="flex items-center justify-between flex-wrap gap-4">
@@ -107,14 +125,24 @@ const AdminLuckyDraw = () => {
                 </p>
               </div>
             </div>
-            <Button
-              onClick={exportToCSV}
-              className="bg-white text-yellow-700 hover:bg-yellow-50 font-bold"
-              disabled={filteredEntries.length === 0}
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Export CSV
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => fetchEntries(true)}
+                disabled={refreshing}
+                className="bg-white/10 text-white hover:bg-white/20 font-bold border border-yellow-400/30"
+              >
+                <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+                {refreshing ? "Refreshing..." : "Refresh"}
+              </Button>
+              <Button
+                onClick={exportToCSV}
+                className="bg-white text-yellow-700 hover:bg-yellow-50 font-bold"
+                disabled={filteredEntries.length === 0}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export CSV
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -229,8 +257,9 @@ const AdminLuckyDraw = () => {
             <div className="text-green-100">Draw Date</div>
           </div>
         </div>
+        </div>
       </div>
-    </div>
+    </AdminAuth>
   );
 };
 

@@ -1,0 +1,54 @@
+═══════════════════════════════════════════════════════════════
+  CANDIDATES NOT SHOWING - QUICK FIX
+═══════════════════════════════════════════════════════════════
+
+Your candidates.csv was imported but needs to be fixed.
+
+═══════════════════════════════════════════════════════════════
+  DO THIS NOW (3 STEPS):
+═══════════════════════════════════════════════════════════════
+
+STEP 1: Open this URL in your browser
+──────────────────────────────────────────────────────────────
+https://supabase.com/dashboard/project/szvovmtjwszfiyfdqqag/sql
+
+
+STEP 2: Copy and paste ALL the SQL from this file:
+──────────────────────────────────────────────────────────────
+FIX_EVERYTHING_NOW.sql
+
+Then click RUN and wait for it to finish.
+
+
+STEP 3A: If it says "NO DATA FOUND!" at the bottom:
+──────────────────────────────────────────────────────────────
+1. Go to: https://supabase.com/dashboard/project/szvovmtjwszfiyfdqqag/editor
+2. Click: membership_applications table
+3. Click: Insert → Import from CSV
+4. Upload: images/candidates.csv
+5. The columns will auto-map correctly now!
+
+
+STEP 3B: If it shows candidate data at the bottom:
+──────────────────────────────────────────────────────────────
+Your data is already there! Just refresh the admin page:
+
+http://localhost:8080/admin/applications
+
+Press Ctrl+Shift+R to hard refresh.
+
+Your candidates will now appear! ✅
+
+═══════════════════════════════════════════════════════════════
+
+WHAT WAS FIXED:
+- Created councillor_applications table (fixes red error)
+- Created/fixed membership_applications table structure
+- Created lucky_draw_entries table
+- Set up all RLS policies
+- Ready to import your CSV
+
+FILES YOU NEED:
+- FIX_EVERYTHING_NOW.sql ← Run this in Supabase first!
+
+═══════════════════════════════════════════════════════════════
